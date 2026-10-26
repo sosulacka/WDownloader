@@ -260,6 +260,16 @@ fn launch(dir: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// Сайт команды из пасхалки. Адрес зашит, фронт его не передаёт.
+#[tauri::command]
+fn open_site() -> Result<(), String> {
+    Command::new("explorer.exe")
+        .arg("https://wteam.su")
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 /// Закрывает окно. После удаления uninstall.exe и папка стираются через cmd,
 /// потому что запущенный exe не может удалить сам себя.
 #[tauri::command]
@@ -283,7 +293,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            info, pick_dir, install, uninstall, launch, quit
+            info, pick_dir, install, uninstall, launch, open_site, quit
         ])
         .setup(|app| {
             // Данные WebView во временной папке: установщик ничего не оставляет у пользователя.

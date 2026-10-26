@@ -23,7 +23,7 @@
 
     <main class="layout">
       <aside class="hero" data-tauri-drag-region>
-        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <svg class="logo" id="logo" viewBox="0 0 32 32" aria-hidden="true">
           <rect class="logo-bg" width="32" height="32" rx="9" />
           <g class="logo-glyph">
             <path class="v1" d="M8 8 12 18 16 10" pathLength="1" />
@@ -122,6 +122,41 @@
         </div>
       </section>
     </main>
+    <!-- Пасхалка: тройной клик по логотипу -->
+    <div class="credits-backdrop" id="credits" hidden>
+      <section class="credits" role="dialog" aria-modal="true" aria-labelledby="credits-title">
+        <button class="credits-close" id="credits-close" aria-label="Закрыть">
+          <svg viewBox="0 0 24 24"><path d="M7 7L17 17M17 7L7 17" /></svg>
+        </button>
+        <span class="credits-logo">
+          <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+            <rect class="logo-bg" width="32" height="32" rx="9" />
+            <g class="logo-glyph">
+              <path class="v1" d="M8 8 12 18 16 10" pathLength="1" />
+              <path class="v2" d="M16 10 20 18 24 8" pathLength="1" />
+            </g>
+            <path
+              class="tray"
+              d="M8.5 21v1.25A2.25 2.25 0 0 0 10.75 24.5h10.5a2.25 2.25 0 0 0 2.25-2.25V21"
+              pathLength="1"
+            />
+          </svg>
+        </span>
+        <h2 id="credits-title" class="credits-title">
+          <span style="--i: 0">CREATED</span>
+          <span style="--i: 1">BY</span>
+          <span style="--i: 2">WTEAM</span>
+        </h2>
+        <dl class="credits-list">
+          <div><dt>Разработчик</dt><dd>CYN</dd></div>
+          <div><dt>Discord</dt><dd>@syswow64deleted</dd></div>
+        </dl>
+        <button class="credits-link" id="credits-site">
+          wteam.su
+          <svg viewBox="0 0 24 24"><path d="M6 6H17.5C17.77614 6 18 6.22386 18 6.5V18M7.2 16.8L17.4 6.6" /></svg>
+        </button>
+      </section>
+    </div>
     <script src="app.js"></script>
   </body>
 </html>

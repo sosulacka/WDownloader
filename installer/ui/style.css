@@ -555,3 +555,164 @@ body.busy .logo-glyph {
     transform: rotate(-120deg) scale(0.4);
   }
 }
+
+/* ---------- Пасхалка: тройной клик по логотипу ---------- */
+#logo {
+  cursor: pointer;
+  transition: transform 0.25s var(--spring);
+}
+#logo:active {
+  transform: scale(0.9);
+}
+#logo.tap-1 {
+  transform: rotate(-8deg) scale(0.96);
+}
+#logo.tap-2 {
+  transform: rotate(8deg) scale(1.06);
+}
+.credits-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #000000b8;
+  backdrop-filter: blur(6px);
+  animation: fade 0.2s;
+}
+[data-theme="light"] .credits-backdrop {
+  background: #0a0a0b59;
+}
+.credits-backdrop[hidden] {
+  display: none;
+}
+.credits-backdrop.closing {
+  animation: fade-out 0.18s forwards;
+}
+.credits {
+  position: relative;
+  width: 400px;
+  max-width: 100%;
+  padding: 30px 30px 24px;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line-2), 0 28px 64px -16px #000;
+  animation: credits-in 0.4s var(--spring);
+}
+.credits-backdrop.closing .credits {
+  animation: credits-out 0.18s ease forwards;
+}
+.credits-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--text-2);
+  transition: background 0.15s, color 0.15s;
+}
+.credits-close:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.credits-logo {
+  display: inline-flex;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+  animation: credits-logo 0.7s var(--spring) both;
+}
+.credits-logo .logo {
+  width: 44px;
+  height: 44px;
+}
+.credits-title {
+  margin: 22px 0 20px;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -1.2px;
+}
+.credits-title span {
+  display: inline-block;
+  margin-right: 0.24em;
+  animation: rise 0.5s var(--ease-out) both;
+  animation-delay: calc(0.15s + var(--i) * 80ms);
+}
+.credits-title span:last-child {
+  display: block;
+}
+.credits-list {
+  margin: 0;
+  padding: 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+  animation: fade 0.5s 0.4s both;
+}
+.credits-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.credits-list dt {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.credits-list dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+.credits-link {
+  width: 100%;
+  padding: 15px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line-2);
+  font-size: 16px;
+  font-weight: 600;
+  animation: fade 0.5s 0.5s both;
+}
+.credits-link svg {
+  transition: transform 0.3s var(--ease-out);
+}
+.credits-link:hover svg {
+  transform: translate(3px, -3px);
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes credits-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+@keyframes credits-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+@keyframes credits-logo {
+  from {
+    opacity: 0;
+    transform: rotate(-14deg) scale(0.6);
+  }
+}

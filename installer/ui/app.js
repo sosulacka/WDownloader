@@ -172,6 +172,51 @@ $("theme").addEventListener("click", (event) => {
 });
 paintThemeButton();
 
+// Пасхалка: три клика по логотипу, каждый не позже 600 мс после предыдущего.
+let taps = 0;
+let tapTimer;
+function openCredits() {
+  const box = $("credits");
+  box.hidden = false;
+  box.classList.remove("closing");
+  // Перезапуск анимаций при повторном открытии.
+  box.querySelectorAll("*").forEach((el) => {
+    el.style.animation = "none";
+    void el.offsetWidth;
+    el.style.animation = "";
+  });
+  $("credits-close").focus();
+}
+function closeCredits() {
+  const box = $("credits");
+  if (box.hidden) return;
+  box.classList.add("closing");
+  setTimeout(() => {
+    box.hidden = true;
+    box.classList.remove("closing");
+  }, 180);
+}
+$("logo").addEventListener("click", () => {
+  clearTimeout(tapTimer);
+  taps += 1;
+  const logo = $("logo");
+  logo.classList.remove("tap-1", "tap-2");
+  if (taps >= 3) {
+    taps = 0;
+    openCredits();
+    return;
+  }
+  logo.classList.add(`tap-${taps}`);
+  tapTimer = setTimeout(() => {
+    taps = 0;
+    logo.classList.remove("tap-1", "tap-2");
+  }, 600);
+});
+$("credits").addEventListener("click", (e) => e.target === $("credits") && closeCredits());
+$("credits-close").addEventListener("click", closeCredits);
+$("credits-site").addEventListener("click", () => invoke("open_site").catch(() => {}));
+document.addEventListener("keydown", (e) => e.key === "Escape" && closeCredits());
+
 $("minimize").addEventListener("click", () => win.minimize());
 $("close").addEventListener("click", () => !busy && invoke("quit", { cleanup: false }));
 $("cancel").addEventListener("click", () => invoke("quit", { cleanup: false }));
