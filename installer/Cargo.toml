@@ -1,6 +1,6 @@
 [package]
 name = "wdownloader-setup"
-version = "0.1.0"
+version = "0.1.1"
 description = "Wdownloader installer"
 authors = ["WTEAM"]
 edition = "2021"

@@ -2,6 +2,7 @@ import { t } from "../lib/i18n";
 import type { Dispatch, SetStateAction } from "react";
 import Segmented from "./Segmented";
 import LanguageSwitch from "./LanguageSwitch";
+import YouTubeSession from "./YouTubeSession";
 import Logo, { Wordmark } from "./Logo";
 import {
   Check,
@@ -20,7 +21,7 @@ import {
   CircleHalf,
 } from "./icons";
 import type { Appearance, IconStyle, Theme } from "../lib/appearance";
-import { cleanPath, type Dependencies, type Prefs } from "../lib/types";
+import { cleanPath, type Dependencies, type Prefs, type YtdlpUpdate } from "../lib/types";
 
 type Props = {
   prefs: Prefs;
@@ -35,6 +36,10 @@ type Props = {
   onChooseFolder: () => void;
   onCheck: () => void;
   onInstall: () => void;
+  updatingYtdlp: boolean;
+  ytdlpUpdate: YtdlpUpdate | null;
+  ytdlpUpdateError: string;
+  onUpdateYtdlp: () => void;
 };
 
 const themeOptions: readonly (readonly [Theme, string, typeof Sun])[] = [
@@ -92,6 +97,10 @@ export default function SettingsPage({
   onChooseFolder,
   onCheck,
   onInstall,
+  updatingYtdlp,
+  ytdlpUpdate,
+  ytdlpUpdateError,
+  onUpdateYtdlp,
 }: Props) {
   const tools = [
     ["yt-dlp", t("Загрузка видео и получение форматов"), deps?.ytDlp],
@@ -221,6 +230,8 @@ export default function SettingsPage({
         />
       </section>
 
+      <YouTubeSession desktop={desktop} />
+
       <section className="card settings-card wide">
         <div className="card-title">
           <span className="card-title-icon">
@@ -273,13 +284,29 @@ export default function SettingsPage({
                 : t("Установить компоненты")}
           </button>
         </div>
+        <div className="ytdlp-updater">
+          <div>
+            <strong>{t("Автообновление yt-dlp")}</strong>
+            <p>{t("Проверка при запуске, не чаще раза в сутки. Новая версия проверяется по SHA256; при ошибке старая остаётся на месте.")}</p>
+            {ytdlpUpdate?.version && !ytdlpUpdateError && (
+              <small>{t("Версия yt-dlp: {0}", { 0: ytdlpUpdate.version })}</small>
+            )}
+            {ytdlpUpdate?.status === "deferred" && <small>{t("Повторите проверку после завершения загрузок и предпросмотра.")}</small>}
+            {ytdlpUpdate?.status === "unsupported" && <small>{t("Автообновление доступно для Windows x64.")}</small>}
+          </div>
+          <button type="button" className="button secondary small" disabled={!desktop || installing || updatingYtdlp} onClick={onUpdateYtdlp}>
+            <RotateCcw size={15} className={updatingYtdlp ? "spin" : ""} />
+            {t(updatingYtdlp ? "Проверяем…" : ytdlpUpdateError ? "Повторить обновление" : "Проверить обновление yt-dlp")}
+          </button>
+        </div>
+        {ytdlpUpdateError && <div className="inline-error" role="alert"><CircleAlert size={17} /><span>{t(ytdlpUpdateError)}</span></div>}
       </section>
 
       <section className="card settings-card wide about-card">
         <Logo size={44} />
         <div>
           <Wordmark />
-          <p>{t("Версия 0.1.0 · Rust + Tauri v2 + Astro · Иконки Keyline Icons")}</p>
+          <p>{t("Версия 0.1.1 · Rust + Tauri v2 + Astro · Иконки Keyline Icons")}</p>
           <small>
             {t("Обработка идёт на вашем устройстве. FLAC и WAV сохраняют результат декодирования и не восстанавливают качество, потерянное при сжатии на YouTube.")}</small>
         </div>

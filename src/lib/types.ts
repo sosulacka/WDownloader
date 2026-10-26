@@ -48,6 +48,10 @@ export type Dependencies = {
   folder: string;
   toolsFolder: string;
 };
+export type YtdlpUpdate = {
+  status: "updated" | "current" | "recent" | "deferred" | "unsupported";
+  version: string | null;
+};
 export type Prefs = {
   folder: string;
   metadata: boolean;

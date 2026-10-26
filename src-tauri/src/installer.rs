@@ -123,11 +123,12 @@ async fn verify_binary(path: &Path, name: &str) -> Result<(), String> {
     Ok(())
 }
 
-async fn install_one(
+pub(super) async fn install_one(
     app: &tauri::AppHandle,
     client: &reqwest::Client,
     tool: &str,
     target: &Path,
+    ytdlp_tag: Option<&str>,
 ) -> Result<(), String> {
     let staging = target.join(format!(".install-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&staging).map_err(|e| e.to_string())?;
@@ -139,8 +140,12 @@ async fn install_one(
     let result = async {
         if tool == "yt-dlp" {
             let file = staging.join("yt-dlp.exe");
-            download(app, client, tool, "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe", &file).await?;
-            let sums = client.get("https://github.com/yt-dlp/yt-dlp/releases/latest/download/SHA2-256SUMS").send().await.map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?.text().await.map_err(|e| e.to_string())?;
+            let base = match ytdlp_tag {
+                Some(tag) => format!("https://github.com/yt-dlp/yt-dlp/releases/download/{tag}"),
+                None => "https://github.com/yt-dlp/yt-dlp/releases/latest/download".into(),
+            };
+            download(app, client, tool, &format!("{base}/yt-dlp.exe"), &file).await?;
+            let sums = client.get(format!("{base}/SHA2-256SUMS")).send().await.map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?.text().await.map_err(|e| e.to_string())?;
             let expected = sums.lines().find_map(|line| { let mut parts = line.split_whitespace(); let hash = parts.next()?; if parts.next()? == "yt-dlp.exe" { Some(hash) } else { None } }).ok_or("Не удалось получить контрольную сумму yt-dlp.")?;
             let mut reader = std::fs::File::open(&file).map_err(|e| e.to_string())?;
             let mut hash = Sha256::new();
@@ -160,7 +165,7 @@ async fn install_one(
         for binary in &binaries { verify_binary(&staging.join(binary), binary).await?; }
         for binary in &binaries {
             let destination = target.join(binary);
-            if destination.exists() { std::fs::remove_file(&destination).map_err(|e| format!("Не удалось заменить {binary}: {e}"))?; }
+            // Заменяем целиком: при сбое старый файл остаётся на месте.
             std::fs::rename(staging.join(binary), destination).map_err(|e| format!("Не удалось сохранить {binary}: {e}"))?;
         }
         progress(app, tool, "ready", 0, None);
@@ -219,7 +224,7 @@ pub(super) async fn ensure_dependencies(
         )
     })?;
     let client = reqwest::Client::builder()
-        .user_agent("Wdownloader/0.1.0")
+        .user_agent(concat!("Wdownloader/", env!("CARGO_PKG_VERSION")))
         .connect_timeout(std::time::Duration::from_secs(25))
         .read_timeout(std::time::Duration::from_secs(45))
         .timeout(std::time::Duration::from_secs(900))
@@ -227,7 +232,7 @@ pub(super) async fn ensure_dependencies(
         .map_err(|e| failure("Сеть", e.to_string()))?;
     for (tool, missing) in needed {
         if missing {
-            install_one(&app, &client, tool, &target)
+            install_one(&app, &client, tool, &target, None)
                 .await
                 .map_err(|e| failure(tool, e))?;
         }

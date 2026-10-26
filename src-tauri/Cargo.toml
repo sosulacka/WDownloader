@@ -1,6 +1,6 @@
 [package]
 name = "wdownloader"
-version = "0.1.0"
+version = "0.1.1"
 description = "A considered desktop video downloader"
 authors = ["Wdownloader"]
 edition = "2021"

@@ -239,7 +239,7 @@ pub(super) async fn prepare_preview(
         let path = dir.join(format!("{key}-{kind}.{extension}"));
         if !path.is_file() {
             let source = if let Some(url) = source_url {
-                let mut cmd = ytdlp(&app)?;
+                let (mut cmd, _session) = ytdlp(&app)?;
                 let raw_template = dir.join(format!("{key}-{kind}-source.%(ext)s"));
                 cmd.args(["--newline", "--progress", "--progress-delta", "0.5", "--progress-template", "download:WD_PREVIEW:%(progress.downloaded_bytes)s|%(progress.total_bytes,progress.total_bytes_estimate)s", "--no-simulate", "--no-warnings", "-o"]).arg(raw_template);
                 if kind == "audio" { cmd.args(["-f", "bestaudio[ext=m4a]/bestaudio/best", "-x", "--audio-format", "mp3", "--audio-quality", "5"]); }

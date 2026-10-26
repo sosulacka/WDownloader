@@ -15,6 +15,8 @@ use tokio::{
 };
 mod installer;
 mod preview;
+mod youtube_session;
+mod ytdlp_update;
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -151,7 +153,7 @@ fn locate(app: &tauri::AppHandle, name: &str) -> Option<PathBuf> {
         .find(|p| p.is_file())
 }
 
-fn ytdlp(app: &tauri::AppHandle) -> Result<Command, String> {
+fn ytdlp(app: &tauri::AppHandle) -> Result<(Command, Option<youtube_session::SessionFile>), String> {
     let path = locate(app, "yt-dlp")
         .ok_or("Не найден yt-dlp. Повторите установку компонентов в настройках приложения.")?;
     let mut cmd = command(path);
@@ -173,7 +175,11 @@ fn ytdlp(app: &tauri::AppHandle) -> Result<Command, String> {
         cmd.arg("--js-runtimes")
             .arg(format!("deno:{}", path.display()));
     }
-    Ok(cmd)
+    let session = youtube_session::prepare(app)?;
+    if let Some(session) = &session {
+        cmd.arg("--cookies").arg(&session.path);
+    }
+    Ok((cmd, session))
 }
 
 fn default_folder(app: &tauri::AppHandle) -> PathBuf {
@@ -202,6 +208,23 @@ fn check_dependencies(app: tauri::AppHandle) -> Dependencies {
 
 fn error_message(stderr: &[u8]) -> String {
     let text = String::from_utf8_lossy(stderr);
+    let lower = text.to_lowercase();
+    if lower.contains("getaddrinfo failed") || lower.contains("failed to resolve")
+        || lower.contains("name or service not known")
+    {
+        return "Не удалось определить адрес сервера (DNS). Проверьте DNS и подключение Windows. DNS браузера может отличаться от системного.".into();
+    }
+    if lower.contains("sign in to confirm") || lower.contains("confirm you're not a bot")
+        || lower.contains("confirm you’re not a bot")
+    {
+        return "YouTube требует вход или проверку в браузере. Откройте ролик в браузере, затем подключите свою сессию в настройках: Сессия YouTube. Если сессия уже подключена, импортируйте свежий файл.".into();
+    }
+    if lower.contains("connectionreseterror")
+        || lower.contains("connection was reset")
+        || lower.contains("winerror 10054")
+    {
+        return "Соединение с YouTube сброшено. Если сайт работает через zapret / GoodbyeDPI, проверьте стратегию для HTTPS (TCP 443) или используйте VPN для всего компьютера.".into();
+    }
     text.lines()
         .rev()
         .find(|l| l.contains("ERROR:"))
@@ -215,7 +238,7 @@ fn error_message(stderr: &[u8]) -> String {
 #[tauri::command]
 async fn inspect_video(app: tauri::AppHandle, url: String) -> Result<VideoInfo, String> {
     let url = normalize_url(&url)?;
-    let mut cmd = ytdlp(&app)?;
+    let (mut cmd, _session) = ytdlp(&app)?;
     cmd.args([
         "--dump-single-json",
         "--skip-download",
@@ -450,7 +473,7 @@ async fn download_worker(
         publish(app, state, id, |j| j.status = "cancelled".into());
         return Ok(());
     }
-    let mut cmd = ytdlp(app)?;
+    let (mut cmd, _session) = ytdlp(app)?;
     let suffix = if job.request.quality == "best" {
         "source".to_string()
     } else if job.request.kind == "video" {
@@ -691,6 +714,11 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             check_dependencies,
+            youtube_session::youtube_session_connected,
+            youtube_session::import_youtube_session,
+            youtube_session::clear_youtube_session,
+            youtube_session::open_youtube_session_help,
+            ytdlp_update::update_ytdlp,
             inspect_video,
             get_jobs,
             start_download,

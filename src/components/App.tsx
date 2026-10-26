@@ -42,6 +42,7 @@ import {
   type Prefs,
   type Request,
   type VideoInfo,
+  type YtdlpUpdate,
 } from "../lib/types";
 import type { ClipRange } from "../lib/media";
 
@@ -86,6 +87,9 @@ export default function App() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [checking, setChecking] = useState(false);
+  const [updatingYtdlp, setUpdatingYtdlp] = useState(false);
+  const [ytdlpUpdate, setYtdlpUpdate] = useState<YtdlpUpdate | null>(null);
+  const [ytdlpUpdateError, setYtdlpUpdateError] = useState("");
   const [showHelp, setShowHelp] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
   const [clip, setClip] = useState<ClipRange | null>(null);
@@ -95,6 +99,7 @@ export default function App() {
   const mainRef = useRef<HTMLDivElement>(null);
   const requestCounter = useRef(0);
   const installerBusy = useRef(false);
+  const updaterBusy = useRef(false);
   const toastCounter = useRef(0);
   const active = jobs.filter((j) => activeStates.includes(j.status));
   const finished = jobs.filter((j) => !activeStates.includes(j.status));
@@ -168,6 +173,8 @@ export default function App() {
           !dependencies.deno
         )
           void runInstaller();
+        else
+          void updateYtdlp(false);
         setPrefs((p) => ({ ...p, folder: p.folder || dependencies.folder }));
         const history = await invoke<Job[]>("get_jobs");
         if (disposed) return;
@@ -395,6 +402,7 @@ export default function App() {
     setInstallProgress(null);
     try {
       setDeps(await invoke<Dependencies>("ensure_dependencies"));
+      void updateYtdlp(false);
     } catch (e) {
       const failure = e as Partial<InstallFailure>;
       setInstallError({
@@ -413,6 +421,27 @@ export default function App() {
     } finally {
       installerBusy.current = false;
       setInstalling(false);
+    }
+  }
+
+  async function updateYtdlp(force: boolean) {
+    if (updaterBusy.current) return;
+    updaterBusy.current = true;
+    setUpdatingYtdlp(true);
+    setYtdlpUpdateError("");
+    try {
+      const result = await invoke<YtdlpUpdate>("update_ytdlp", { force });
+      setYtdlpUpdate(result);
+      if (result.status === "updated") {
+        setDeps(await invoke<Dependencies>("check_dependencies"));
+        notify(t("yt-dlp обновлён до {0}", { 0: result.version }));
+      }
+    } catch (e) {
+      setYtdlpUpdateError(errorText(e));
+      notify(t("Не удалось обновить yt-dlp. Повторите проверку в настройках."), "error");
+    } finally {
+      updaterBusy.current = false;
+      setUpdatingYtdlp(false);
     }
   }
 
@@ -529,6 +558,10 @@ export default function App() {
                 onChooseFolder={() => void chooseFolder()}
                 onCheck={() => void checkDependencies()}
                 onInstall={() => void runInstaller()}
+                updatingYtdlp={updatingYtdlp}
+                ytdlpUpdate={ytdlpUpdate}
+                ytdlpUpdateError={ytdlpUpdateError}
+                onUpdateYtdlp={() => void updateYtdlp(true)}
               />
             ) : (
               <JobList
