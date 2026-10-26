@@ -1,0 +1,39 @@
+[package]
+name = "wdownloader-setup"
+version = "0.1.0"
+description = "Wdownloader installer"
+authors = ["WTEAM"]
+edition = "2021"
+
+[[bin]]
+name = "wdownloader-setup"
+path = "src/main.rs"
+
+[[bin]]
+name = "pack"
+path = "src/pack.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["custom-protocol"] }
+tauri-plugin-dialog = "~2.7.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Com",
+    "Win32_System_Registry",
+    "Win32_UI_Shell",
+] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true

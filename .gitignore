@@ -7,3 +7,5 @@ tools/*
 .tools-cache/
 *.log
 .DS_Store
+installer/target/
+dist-installer/

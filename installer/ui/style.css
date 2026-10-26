@@ -1,0 +1,557 @@
+@font-face {
+  --ease: cubic-bezier(0.7, 0, 0.2, 1);
+  font-family: "Manrope";
+  font-weight: 200 800;
+  font-display: block;
+  src: url("fonts/manrope-cyrillic-wght-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Manrope";
+  font-weight: 200 800;
+  font-display: block;
+  src: url("fonts/manrope-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF;
+}
+:root {
+  --bg: #09090a;
+  --surface: #111113;
+  --surface-2: #17171a;
+  --surface-3: #1f1f23;
+  --hover: #ffffff0b;
+  --line: #ffffff10;
+  --line-2: #ffffff1c;
+  --line-3: #ffffff30;
+  --text: #f5f5f4;
+  --text-2: #a3a3a9;
+  --text-3: #66666d;
+  --ink: #f5f5f4;
+  --ink-text: #0a0a0b;
+  --ink-hover: #ffffff;
+  --hero: #0d0d0f;
+  --hero-glow: #ffffff0a;
+  --ring: #ffffff03;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.5, 0.64, 1);
+  color-scheme: dark;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+[data-theme="light"] {
+  --bg: #f3f3f1;
+  --surface: #ffffff;
+  --surface-2: #ffffff;
+  --surface-3: #e6e6e3;
+  --hover: #0000000a;
+  --line: #00000010;
+  --line-2: #0000001a;
+  --line-3: #00000030;
+  --text: #0a0a0b;
+  --text-2: #56565c;
+  --text-3: #8d8d93;
+  --ink: #0a0a0b;
+  --ink-text: #fafafa;
+  --ink-hover: #2a2a2e;
+  --hero: #f8f8f6;
+  --hero-glow: #0000000a;
+  --ring: #00000004;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  user-select: none;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+h1,
+h2,
+p {
+  margin: 0;
+}
+svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes drop {
+  50% {
+    transform: translateY(2px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Окно ---------- */
+.titlebar {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 18px;
+  z-index: 10;
+}
+.titlebar-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  margin-left: 300px;
+}
+.titlebar-controls {
+  display: flex;
+  height: 100%;
+}
+.titlebar-controls button {
+  width: 46px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+  transition: background 0.15s, color 0.15s;
+}
+.titlebar-controls button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.titlebar-controls button.close:hover {
+  background: var(--ink);
+  color: var(--ink-text);
+}
+.titlebar-controls svg {
+  width: 15px;
+  height: 15px;
+}
+.layout {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+
+/* ---------- Левая колонка ---------- */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 26px 22px;
+  border-right: 1px solid var(--line);
+  background:
+    radial-gradient(120% 70% at 0% 0%, var(--hero-glow), transparent 60%),
+    var(--hero);
+  overflow: hidden;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -40px -80px auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  box-shadow: 0 0 0 40px var(--ring), 0 0 0 80px var(--ring);
+  pointer-events: none;
+}
+.logo {
+  width: 52px;
+  height: 52px;
+  overflow: visible;
+  animation: rise 0.6s var(--ease-out) both;
+}
+.logo-bg {
+  fill: var(--ink);
+  stroke: none;
+}
+.logo-glyph path,
+.logo .tray {
+  stroke: var(--ink-text);
+  stroke-width: 2.6;
+  stroke-dasharray: 1;
+  animation: draw 0.9s var(--ease-out) 0.2s both;
+}
+.logo .v2 {
+  opacity: 0.45;
+  animation-delay: 0.32s;
+}
+.logo .tray {
+  stroke-width: 2.2;
+  animation-delay: 0.5s;
+}
+body.busy .logo-glyph {
+  animation: drop 1.3s ease-in-out infinite;
+}
+.hero-text {
+  margin-top: 34px;
+  animation: rise 0.6s var(--ease-out) 0.1s both;
+}
+.eyebrow,
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.hero h1 {
+  margin: 12px 0 10px;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+.hero p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.facts {
+  margin: auto 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  animation: rise 0.6s var(--ease-out) 0.2s both;
+}
+.facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+.facts dt {
+  color: var(--text-3);
+}
+.facts dd {
+  margin: 0;
+  font-weight: 650;
+}
+.credit {
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.4px;
+}
+
+/* ---------- Правая колонка ---------- */
+.panel {
+  position: relative;
+  padding: 58px 34px 26px;
+}
+.screen {
+  position: absolute;
+  inset: 58px 34px 26px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(18px);
+  transition: opacity 0.35s, transform 0.45s var(--ease-out), visibility 0.35s;
+}
+.screen.active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.screen.leaving {
+  transform: translateX(-18px);
+}
+.step i {
+  width: 18px;
+  height: 1px;
+  background: var(--line-3);
+}
+.screen h2 {
+  margin: 14px 0 6px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+}
+.lead {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 22px;
+}
+.folder {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--surface-2);
+  text-align: left;
+  transition: border-color 0.2s;
+}
+.folder:not(.static):hover {
+  border-color: var(--line-3);
+}
+.folder > span {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+.folder small {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+.toggle-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.toggle-row:first-of-type {
+  margin-top: 8px;
+}
+.toggle-row strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.toggle-row small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.toggle {
+  width: 40px;
+  height: 24px;
+  padding: 3px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  background: var(--surface-3);
+  box-shadow: 0 0 0 1px var(--line-2) inset;
+  transition: background 0.25s;
+}
+.toggle i {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-3);
+  transition: transform 0.35s var(--spring), background 0.25s;
+}
+[aria-checked="true"] .toggle {
+  background: var(--ink);
+}
+[aria-checked="true"] .toggle i {
+  background: var(--ink-text);
+  transform: translateX(16px);
+}
+.error {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px dashed var(--line-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  animation: rise 0.3s var(--ease-out);
+}
+.actions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.size {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.button {
+  height: 44px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 650;
+  transition: background 0.2s, transform 0.2s var(--spring), box-shadow 0.2s;
+}
+.button:not(:disabled):active {
+  transform: scale(0.97);
+}
+.button.primary {
+  background: var(--ink);
+  color: var(--ink-text);
+}
+.button.primary:not(:disabled):hover {
+  background: var(--ink-hover);
+  box-shadow: 0 8px 24px -10px var(--ink);
+}
+.button.primary svg {
+  transition: transform 0.3s var(--ease-out);
+}
+.button.primary:not(:disabled):hover svg {
+  transform: translateX(3px);
+}
+.button.ghost {
+  border: 1px solid var(--line-2);
+}
+.button.ghost:hover {
+  background: var(--hover);
+}
+
+/* ---------- Прогресс ---------- */
+.percent {
+  margin: 26px 0 18px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 72px;
+  font-weight: 800;
+  letter-spacing: -3px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.percent small {
+  font-size: 28px;
+  color: var(--text-3);
+  letter-spacing: 0;
+}
+.track {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--surface-3);
+}
+.track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--text);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.3s var(--ease-out);
+}
+.current {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Готово ---------- */
+.done-mark {
+  margin-top: 22px;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--ink);
+  color: var(--ink-text);
+  transform: scale(0.6);
+  opacity: 0;
+}
+.screen.active .done-mark {
+  animation: pop 0.6s var(--spring) 0.1s forwards;
+}
+.done-mark svg {
+  width: 30px;
+  height: 30px;
+  stroke-width: 2.4;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.screen.active .done-mark svg {
+  animation: draw 0.5s var(--ease-out) 0.4s forwards;
+}
+@keyframes pop {
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ---------- Смена темы: круг от кнопки, как в приложении ---------- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  z-index: 2;
+}
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: none !important;
+}
+.theme-icon {
+  display: grid;
+  place-items: center;
+  animation: theme-icon 0.55s var(--spring);
+}
+@keyframes theme-icon {
+  from {
+    opacity: 0;
+    transform: rotate(-120deg) scale(0.4);
+  }
+}

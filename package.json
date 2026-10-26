@@ -11,7 +11,8 @@
     "tauri": "tauri",
     "desktop": "tauri dev",
     "desktop:build": "tauri build",
-    "setup:tools": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-tools.ps1"
+    "setup:tools": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-tools.ps1",
+    "setup:build": "node scripts/build-setup.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.1",

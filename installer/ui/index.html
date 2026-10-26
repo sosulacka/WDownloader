@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wdownloader Setup</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="theme.js"></script>
+  </head>
+  <body>
+    <div class="titlebar" data-tauri-drag-region>
+      <span class="titlebar-name" data-tauri-drag-region id="window-title">Установка</span>
+      <div class="titlebar-controls">
+        <button id="theme" aria-label="Светлая тема"><span class="theme-icon" id="theme-icon"></span></button>
+        <button id="minimize" aria-label="Свернуть">
+          <svg viewBox="0 0 24 24"><path d="M5 12H19" /></svg>
+        </button>
+        <button id="close" class="close" aria-label="Закрыть">
+          <svg viewBox="0 0 24 24"><path d="M7 7L17 17M17 7L7 17" /></svg>
+        </button>
+      </div>
+    </div>
+
+    <main class="layout">
+      <aside class="hero" data-tauri-drag-region>
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+          <rect class="logo-bg" width="32" height="32" rx="9" />
+          <g class="logo-glyph">
+            <path class="v1" d="M8 8 12 18 16 10" pathLength="1" />
+            <path class="v2" d="M16 10 20 18 24 8" pathLength="1" />
+          </g>
+          <path
+            class="tray"
+            d="M8.5 21v1.25A2.25 2.25 0 0 0 10.75 24.5h10.5a2.25 2.25 0 0 0 2.25-2.25V21"
+            pathLength="1"
+          />
+        </svg>
+        <div class="hero-text" data-tauri-drag-region>
+          <span class="eyebrow" id="hero-eyebrow">Установка</span>
+          <h1>WDOWNLOADER</h1>
+          <p>Видео и аудио с YouTube в нужном формате.</p>
+        </div>
+        <dl class="facts" id="facts"></dl>
+        <span class="credit">WTEAM · v<span id="version"></span></span>
+      </aside>
+
+      <section class="panel">
+        <!-- Установка: параметры -->
+        <div class="screen" data-screen="setup">
+          <span class="step">01 <i></i> Параметры</span>
+          <h2 id="setup-title">Куда установить</h2>
+          <p class="lead" id="setup-lead">Права администратора не нужны.</p>
+          <button class="folder" id="folder">
+            <svg viewBox="0 0 24 24"><path d="M3 7C3 5.3431 4.3431 4 6 4L8.6716 4C9.202 4 9.7107 4.2107 10.0858 4.5858L11.4142 5.9142C11.7893 6.2893 12.298 6.5 12.8284 6.5L18 6.5C19.6569 6.5 21 7.8431 21 9.5L21 17C21 18.6569 19.6569 20 18 20L6 20C4.3431 20 3 18.6569 3 17Z" /></svg>
+            <span id="dir"></span>
+            <small>Изменить</small>
+          </button>
+          <button class="toggle-row" id="desktop" role="switch" aria-checked="true">
+            <span><strong>Ярлык на рабочем столе</strong><small>В меню Пуск ярлык появится всегда.</small></span>
+            <span class="toggle"><i></i></span>
+          </button>
+          <button class="toggle-row" id="launch" role="switch" aria-checked="true">
+            <span><strong>Запустить после установки</strong><small>Откроем приложение сразу.</small></span>
+            <span class="toggle"><i></i></span>
+          </button>
+          <p class="error" id="setup-error" hidden></p>
+          <div class="actions">
+            <span class="size" id="size"></span>
+            <button class="button primary" id="install">
+              <span id="install-label">Установить</span>
+              <svg viewBox="0 0 24 24"><path d="M5 12H18.0587M12.1229 5L18.8261 11.5875C19.058 11.8153 19.058 12.1847 18.8261 12.4125L12.1229 19" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Удаление: подтверждение -->
+        <div class="screen" data-screen="confirm">
+          <span class="step">01 <i></i> Удаление</span>
+          <h2>Удалить Wdownloader?</h2>
+          <p class="lead">Скачанные видео и аудио останутся на месте.</p>
+          <div class="folder static">
+            <svg viewBox="0 0 24 24"><path d="M3 7C3 5.3431 4.3431 4 6 4L8.6716 4C9.202 4 9.7107 4.2107 10.0858 4.5858L11.4142 5.9142C11.7893 6.2893 12.298 6.5 12.8284 6.5L18 6.5C19.6569 6.5 21 7.8431 21 9.5L21 17C21 18.6569 19.6569 20 18 20L6 20C4.3431 20 3 18.6569 3 17Z" /></svg>
+            <span id="uninstall-dir"></span>
+          </div>
+          <button class="toggle-row" id="remove-data" role="switch" aria-checked="false">
+            <span><strong>Удалить настройки и историю</strong><small>Также компоненты, скачанные приложением.</small></span>
+            <span class="toggle"><i></i></span>
+          </button>
+          <p class="error" id="confirm-error" hidden></p>
+          <div class="actions">
+            <button class="button ghost" id="cancel">Отмена</button>
+            <button class="button primary" id="uninstall">
+              Удалить
+              <svg viewBox="0 0 24 24"><path d="M10 2H14M4 7H20M6 7H18V19C18 20.6569 16.6569 22 15 22H9C7.34315 22 6 20.6569 6 19V7ZM10 11L10 18M14 11L14 18" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Прогресс -->
+        <div class="screen" data-screen="progress">
+          <span class="step">02 <i></i> <span id="progress-step">Установка</span></span>
+          <div class="percent"><span id="percent">0</span><small>%</small></div>
+          <div class="track"><i id="bar"></i></div>
+          <p class="current" id="current">Готовим установку…</p>
+        </div>
+
+        <!-- Готово -->
+        <div class="screen" data-screen="done">
+          <span class="step">03 <i></i> Готово</span>
+          <span class="done-mark">
+            <svg viewBox="0 0 24 24"><path d="M5 12L9.66667 17L19 7" pathLength="1" /></svg>
+          </span>
+          <h2 id="done-title">Wdownloader установлен</h2>
+          <p class="lead" id="done-lead">Ярлык в меню Пуск. Удалить можно в параметрах Windows.</p>
+          <div class="actions">
+            <span></span>
+            <button class="button primary" id="finish">
+              <span id="finish-label">Открыть Wdownloader</span>
+              <svg viewBox="0 0 24 24"><path d="M6 6H17.5C17.77614 6 18 6.22386 18 6.5V18M7.2 16.8L17.4 6.6" /></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
