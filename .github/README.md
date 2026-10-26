@@ -1,10 +1,14 @@
 <div align="center">
 
-<img src="public/favicon.svg" width="96" height="96" alt="Wdownloader" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/banner-light.png" />
+  <img src="assets/banner-dark.png" width="100%" alt="Wdownloader: видео и аудио с YouTube в нужном формате" />
+</picture>
 
-# WDOWNLOADER
+<br />
+<br />
 
-**Видео и аудио с YouTube в нужном формате.**
 Строгий монохромный интерфейс, встроенный плеер и обрезка до скачивания.
 
 <br />
@@ -196,7 +200,7 @@ Wdownloader/
 
 ## Лицензия
 
-Wdownloader распространяется по лицензии [GPL-3.0](LICENSE).
+Wdownloader распространяется по лицензии [GPL-3.0](../LICENSE).
 
 Приложение использует внешние инструменты со своими лицензиями: [yt-dlp](https://github.com/yt-dlp/yt-dlp), [FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds) и [Deno](https://github.com/denoland/deno). У GPL-сборки FFmpeg есть требования к распространению исходников. Ссылки на проекты собраны в `tools/THIRD-PARTY.txt`, но перед публичным релизом нужен полный комплект лицензий.
 

@@ -1,10 +1,14 @@
 <div align="center">
 
-<img src="public/favicon.svg" width="96" height="96" alt="Wdownloader" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset=".github/assets/banner-light.png" />
+  <img src=".github/assets/banner-dark.png" width="100%" alt="Wdownloader: видео и аудио с YouTube в нужном формате" />
+</picture>
 
-# WDOWNLOADER
+<br />
+<br />
 
-**Видео и аудио с YouTube в нужном формате.**
 Строгий монохромный интерфейс, встроенный плеер и обрезка до скачивания.
 
 <br />
