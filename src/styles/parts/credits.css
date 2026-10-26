@@ -1,0 +1,108 @@
+/* ---------- Пасхалка: тройной клик по логотипу ---------- */
+.brand-logo {
+  display: flex;
+  border-radius: 9px;
+  transition: transform 0.25s var(--spring);
+}
+.brand-logo:active {
+  transform: scale(0.9);
+}
+/* Каждый клик слегка поворачивает знак, третий открывает окно. */
+.brand-logo.tap-1 {
+  transform: rotate(-8deg) scale(0.96);
+}
+.brand-logo.tap-2 {
+  transform: rotate(8deg) scale(1.06);
+}
+
+.credits-modal {
+  width: 450px;
+  padding: 36px 34px 30px;
+}
+.credits-logo {
+  display: inline-flex;
+  padding: 12px;
+  border-radius: 20px;
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+  animation: credits-logo 0.7s var(--spring) both;
+}
+@keyframes credits-logo {
+  from {
+    opacity: 0;
+    transform: rotate(-14deg) scale(0.6);
+  }
+}
+.credits-logo .logo-glyph path,
+.credits-logo .logo-tray {
+  stroke-dasharray: 1;
+  animation: logo-draw 0.9s var(--ease-out) 0.2s both;
+}
+.credits-logo .logo-tray {
+  animation-delay: 0.45s;
+}
+.credits-title {
+  margin: 28px 0 26px;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -1.4px;
+}
+.credits-title > span {
+  display: inline-block;
+  margin-right: 0.24em;
+  animation: rise 0.5s var(--ease-out) both;
+  animation-delay: calc(0.15s + var(--i) * 80ms);
+}
+.credits-title > span:last-child {
+  display: block;
+}
+.credits-list {
+  margin: 0;
+  padding: 18px 0;
+  border-top: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fade 0.5s 0.4s both;
+}
+.credits-list > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.credits-list dt {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.credits-list dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.credits-link {
+  width: 100%;
+  padding: 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line-2);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  animation: fade 0.5s 0.5s both;
+}
+.credits-link > svg {
+  transition: transform 0.3s var(--ease-out);
+}
+.credits-link:hover > svg {
+  transform: translate(3px, -3px);
+}
+@media (max-width: 760px) {
+  .credits-title {
+    font-size: 34px;
+  }
+}

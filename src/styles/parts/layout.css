@@ -1,0 +1,325 @@
+/* ---------- Каркас окна ---------- */
+.app-shell {
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: var(--sidebar) minmax(0, 1fr);
+  grid-template-rows: var(--titlebar) minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--bg);
+}
+.window-titlebar {
+  grid-column: 1 / -1;
+  height: var(--titlebar);
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  user-select: none;
+  z-index: 50;
+}
+.window-drag-region {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-left: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: default;
+}
+.window-logo {
+  display: flex;
+}
+.window-controls {
+  display: flex;
+  height: 100%;
+}
+.window-controls button {
+  width: 46px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.window-controls button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.window-controls button.window-close:hover {
+  background: var(--ink);
+  color: var(--ink-text);
+}
+.window-controls button:focus-visible {
+  outline-offset: -2px;
+  border-radius: 0;
+}
+.maximize-icon {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  position: relative;
+}
+.maximize-icon.restored {
+  width: 9px;
+  height: 9px;
+  margin: 2px 0 0 -2px;
+}
+.maximize-icon.restored::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  left: 1.5px;
+  top: -4.5px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  border-radius: 0 2px 0 0;
+}
+
+/* ---------- Логотип ---------- */
+.logo-mark {
+  flex-shrink: 0;
+  overflow: visible;
+}
+.logo-bg {
+  fill: var(--ink);
+}
+.logo-glyph path,
+.logo-tray {
+  fill: none;
+  stroke: var(--ink-text);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.logo-v2 {
+  opacity: 0.45;
+}
+.logo-tray {
+  stroke-width: 2.2;
+}
+.brand:hover .logo-glyph,
+.logo-mark.busy .logo-glyph {
+  animation: logo-drop 1.4s var(--ease) infinite;
+}
+.brand .logo-glyph path,
+.brand .logo-tray,
+.help-modal .logo-glyph path,
+.help-modal .logo-tray {
+  stroke-dasharray: 1;
+  animation: logo-draw 0.9s var(--ease-out) both;
+}
+.brand .logo-v2,
+.help-modal .logo-v2 {
+  animation-delay: 0.12s;
+}
+.brand .logo-tray,
+.help-modal .logo-tray {
+  animation-delay: 0.3s;
+}
+@keyframes logo-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes logo-drop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(2.2px);
+  }
+}
+.wordmark {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--text);
+}
+
+/* ---------- Боковая панель ---------- */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px 14px;
+  border-right: 1px solid var(--line);
+  background: var(--bg-raised);
+  min-height: 0;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 8px 26px;
+}
+.nav {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-indicator {
+  position: absolute;
+  inset: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  box-shadow: 0 0 0 1px var(--line) inset;
+  transition:
+    transform 0.4s var(--ease-out),
+    height 0.4s var(--ease-out);
+}
+.nav-indicator::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--text);
+}
+.nav-item {
+  position: relative;
+  z-index: 1;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--text-2);
+  transition: color 0.2s;
+}
+.nav-item:hover,
+.nav-item[aria-current="page"] {
+  color: var(--text);
+}
+.nav-item > svg {
+  transition: transform 0.3s var(--spring);
+}
+.nav-item:active > svg {
+  transform: scale(0.85);
+}
+.nav-badge {
+  margin-left: auto;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.nav-badge.live {
+  color: var(--ink-text);
+  background: var(--ink);
+  border-color: transparent;
+  animation: pop 0.35s var(--spring);
+}
+.sidebar-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.side-link {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--text-2);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.side-link > svg:last-child {
+  margin-left: auto;
+  opacity: 0;
+  transform: translate(-3px, 3px);
+  transition:
+    opacity 0.2s,
+    transform 0.25s var(--ease-out);
+}
+.side-link:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.side-link:hover > svg:last-child {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Основная область ---------- */
+.main-shell {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  position: relative;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.shortcut-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.shortcut-hint > span {
+  margin-left: 4px;
+}
+.theme-flip {
+  border: 1px solid var(--line-2);
+}
+.theme-flip-icon {
+  display: flex;
+  animation: theme-icon 0.55s var(--spring);
+}
+@keyframes theme-icon {
+  from {
+    opacity: 0;
+    transform: rotate(-120deg) scale(0.4);
+  }
+}

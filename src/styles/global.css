@@ -1,0 +1,10 @@
+@import "@fontsource-variable/manrope";
+@import "./parts/base.css";
+@import "./parts/layout.css";
+@import "./parts/controls.css";
+@import "./parts/download.css";
+@import "./parts/jobs.css";
+@import "./parts/settings.css";
+@import "./parts/editor.css";
+@import "./parts/overlays.css";
+@import "./parts/credits.css";

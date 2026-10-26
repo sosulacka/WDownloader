@@ -1,0 +1,34 @@
+{
+  "name": "wdownloader",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1 --port 1420",
+    "build": "astro check && astro build",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "preview": "astro preview --host 127.0.0.1 --port 1420",
+    "tauri": "tauri",
+    "desktop": "tauri dev",
+    "desktop:build": "tauri build",
+    "setup:tools": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-tools.ps1"
+  },
+  "dependencies": {
+    "@astrojs/react": "^7.1.1",
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@keyline-icons/react": "^2.2.0",
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "~2.7.1",
+    "astro": "^7.4.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.0",
+    "@tauri-apps/cli": "^2.0.0",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.9.0"
+  }
+}

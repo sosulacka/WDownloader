@@ -1,0 +1,292 @@
+
+/* ---------- Токены: чёрная тема (по умолчанию) ---------- */
+:root,
+[data-theme="dark"] {
+  --bg: #09090a;
+  --bg-raised: #0d0d0f;
+  --surface: #111113;
+  --surface-2: #17171a;
+  --surface-3: #1f1f23;
+  --hover: #ffffff0b;
+  --press: #ffffff14;
+  --line: #ffffff10;
+  --line-2: #ffffff1c;
+  --line-3: #ffffff30;
+  --text: #f5f5f4;
+  --text-2: #a3a3a9;
+  --text-3: #66666d;
+  --ink: #f5f5f4;
+  --ink-text: #0a0a0b;
+  --ink-hover: #ffffff;
+  --halo: #ffffff0d;
+  --grid: #ffffff05;
+  --wave-dim: #ffffff2b;
+  --wave: #f5f5f4;
+  --backdrop: #000000b8;
+  --shadow: 0 1px 0 #ffffff07 inset, 0 24px 48px -28px #000;
+  --shadow-pop: 0 0 0 1px var(--line-2), 0 28px 64px -16px #000;
+  color-scheme: dark;
+}
+
+/* ---------- Белая тема ---------- */
+[data-theme="light"] {
+  --bg: #f3f3f1;
+  --bg-raised: #f8f8f6;
+  --surface: #ffffff;
+  --surface-2: #f6f6f4;
+  --surface-3: #ebebe8;
+  --hover: #0000000a;
+  --press: #00000012;
+  --line: #00000010;
+  --line-2: #0000001a;
+  --line-3: #00000030;
+  --text: #0a0a0b;
+  --text-2: #56565c;
+  --text-3: #8d8d93;
+  --ink: #0a0a0b;
+  --ink-text: #fafafa;
+  --ink-hover: #2a2a2e;
+  --halo: #ffffffcc;
+  --grid: #00000007;
+  --wave-dim: #0000002b;
+  --wave: #0a0a0b;
+  --backdrop: #0a0a0b59;
+  --shadow: 0 1px 2px #0000000a, 0 18px 40px -26px #00000059;
+  --shadow-pop: 0 0 0 1px var(--line-2), 0 28px 64px -20px #00000052;
+  color-scheme: light;
+}
+
+:root {
+  --radius: 16px;
+  --radius-md: 12px;
+  --radius-sm: 9px;
+  --radius-xs: 6px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.5, 0.64, 1);
+  --titlebar: 36px;
+  --sidebar: 232px;
+  font-family: "Manrope Variable", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- База ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea,
+[contenteditable="true"],
+[contenteditable="true"] *,
+.settings-folder > span {
+  -webkit-user-select: text;
+  user-select: text;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+}
+button,
+input {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+input:focus-visible {
+  outline: none;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+img {
+  display: block;
+}
+::selection {
+  background: var(--ink);
+  color: var(--ink-text);
+}
+kbd {
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--line-3);
+}
+
+/* ---------- Движение ---------- */
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+}
+@keyframes indeterminate {
+  from {
+    transform: translateX(-100%) scaleX(0.4);
+  }
+  to {
+    transform: translateX(250%) scaleX(0.4);
+  }
+}
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0.01ms !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Смена темы: новый снимок раскрывается кругом из точки клика (см. revealTheme). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  z-index: 2;
+}
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: none !important;
+}
+
+/* ---------- Подсказки ---------- */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translate(-50%, 4px);
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: var(--ink);
+  color: var(--ink-text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 60;
+  transition:
+    opacity 0.15s,
+    transform 0.2s var(--ease-out);
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  transition-delay: 0.35s;
+}
+.topbar [data-tooltip]::after {
+  bottom: auto;
+  top: calc(100% + 8px);
+  left: auto;
+  right: 0;
+  transform: translateY(-4px);
+}
+.topbar [data-tooltip]:hover::after,
+.topbar [data-tooltip]:focus-visible::after {
+  transform: none;
+}

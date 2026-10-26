@@ -1,0 +1,300 @@
+/* ---------- Уведомления ---------- */
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 90;
+  max-width: min(420px, calc(100vw - 48px));
+  padding: 12px 8px 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--ink);
+  color: var(--ink-text);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 20px 48px -12px #00000080;
+  animation: toast-in 0.45s var(--spring);
+}
+.toast.leaving {
+  animation: toast-out 0.25s var(--ease) forwards;
+}
+.toast > svg {
+  flex-shrink: 0;
+}
+.toast > span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.toast .icon-button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  color: inherit;
+  opacity: 0.6;
+}
+.toast .icon-button:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--ink-text) 12%, transparent) !important;
+  color: inherit !important;
+}
+.toast-timer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--ink-text);
+  opacity: 0.3;
+  transform-origin: left;
+  animation: toast-timer 4s linear forwards;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+@keyframes toast-timer {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ---------- Модальные окна ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  padding: 32px;
+  display: grid;
+  place-items: center;
+  background: var(--backdrop);
+  backdrop-filter: blur(6px);
+  animation: fade 0.2s;
+}
+.modal-backdrop.closing {
+  animation: fade-out 0.18s forwards;
+}
+.modal {
+  position: relative;
+  max-width: 100%;
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  padding: 26px;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: modal-in 0.4s var(--spring);
+}
+.modal-backdrop.closing .modal {
+  animation: modal-out 0.18s var(--ease) forwards;
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+@keyframes modal-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+.modal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+.modal-heading h2 {
+  margin-top: 8px;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.3px;
+}
+.playback-modal {
+  width: 820px;
+}
+.playback-modal .media-editor {
+  margin-top: 20px;
+}
+.help-modal {
+  width: 460px;
+  padding: 30px;
+}
+.help-modal .eyebrow {
+  margin-top: 22px;
+}
+.help-modal h2 {
+  margin: 8px 0 22px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.9px;
+}
+.modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+}
+.help-steps {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+}
+.help-steps > li {
+  display: flex;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  animation: rise 0.4s var(--ease-out) both;
+  animation-delay: calc(0.1s + var(--i) * 70ms);
+}
+.help-steps > li > span {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--ink);
+  color: var(--ink-text);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.help-steps h3 {
+  font-size: 14px;
+  font-weight: 650;
+}
+.help-steps p {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.help-modal > .button {
+  width: 100%;
+  height: 46px;
+}
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 1080px) {
+  :root {
+    --sidebar: 76px;
+  }
+  .sidebar {
+    padding: 18px 12px 12px;
+    align-items: center;
+  }
+  .brand {
+    padding: 0 0 22px;
+  }
+  .wordmark,
+  .nav-item > span:not(.nav-badge),
+  .side-link > span,
+  .side-link > svg:last-child {
+    display: none;
+  }
+  .nav,
+  .sidebar-bottom {
+    width: 100%;
+  }
+  .nav-item,
+  .side-link {
+    justify-content: center;
+    padding: 0;
+  }
+  .nav-indicator::before {
+    left: -12px;
+  }
+  .nav-badge {
+    position: absolute;
+    top: 3px;
+    right: 6px;
+    min-width: 17px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+  }
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .page {
+    padding: 26px 18px 40px;
+  }
+  .topbar {
+    padding: 0 18px;
+  }
+  .shortcut-hint,
+  .heading-stats {
+    display: none;
+  }
+  .settings-grid,
+  .dependency-grid,
+  .theme-options {
+    grid-template-columns: 1fr;
+  }
+  .url-form {
+    flex-direction: column;
+  }
+  .analyze-button {
+    width: 100%;
+  }
+  .video-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .thumbnail,
+  .thumbnail-skeleton {
+    width: 100%;
+  }
+  .download-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .queue-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .queue-search,
+  .queue-search:focus-within {
+    width: 100%;
+  }
+  .trim-fields {
+    flex-wrap: wrap;
+  }
+  .trim-fields-dash {
+    display: none;
+  }
+  .trim-summary {
+    width: 100%;
+    margin: 6px 0 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  .trim-summary .text-button {
+    margin-left: auto;
+  }
+  .volume-control .custom-range {
+    display: none;
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Wdownloader",
+  "version": "0.1.0",
+  "identifier": "com.wdownloader.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Wdownloader",
+        "width": 1320,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 680,
+        "decorations": false,
+        "shadow": true,
+        "backgroundColor": "#101010"
+      }
+    ],
+    "security": {
+      "assetProtocol": { "enable": true, "scope": [] },
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://i.ytimg.com https://i9.ytimg.com data:; media-src 'self' asset: http://asset.localhost blob:; connect-src ipc: http://ipc.localhost asset: http://asset.localhost; font-src 'self'; object-src 'none'; frame-src 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "resources": { "../tools/": "tools/" },
+    "icon": ["icons/icon.ico", "icons/icon.png"],
+    "shortDescription": "Видео и аудио в нужном формате",
+    "windows": {
+      "nsis": {
+        "displayLanguageSelector": true,
+        "languages": ["Russian", "English"]
+      }
+    }
+  }
+}
