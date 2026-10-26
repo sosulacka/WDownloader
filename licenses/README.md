@@ -13,5 +13,6 @@ components retain their original licenses and copyright notices.
 
 The lightweight installer and portable archive do not bundle yt-dlp, FFmpeg
 or Deno. The application downloads these external tools at runtime.
-The optional local offline build uses the tools prepared by
-`npm run setup:tools`; its notices are included in `tools/THIRD-PARTY.txt`.
+The offline installer is built locally and in GitHub Actions using the tools
+prepared by `npm run setup:tools`. Their license texts, third-party notices,
+versions and source links are included alongside the binaries in `tools/`.

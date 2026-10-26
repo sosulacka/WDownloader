@@ -74,8 +74,11 @@ jobs:
           }
           "version=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Build application and lightweight installer
-        run: npm run setup:build -- --lite
+      - name: Prepare offline components
+        run: npm run setup:tools
+
+      - name: Build application and both installers
+        run: npm run setup:build -- --offline
 
       - name: Package portable app and sources
         env:
