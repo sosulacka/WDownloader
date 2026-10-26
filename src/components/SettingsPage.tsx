@@ -1,5 +1,7 @@
+import { t } from "../lib/i18n";
 import type { Dispatch, SetStateAction } from "react";
 import Segmented from "./Segmented";
+import LanguageSwitch from "./LanguageSwitch";
 import Logo, { Wordmark } from "./Logo";
 import {
   Check,
@@ -67,8 +69,8 @@ function Toggle({
       onClick={onChange}
     >
       <span>
-        <strong>{label}</strong>
-        {description && <small>{description}</small>}
+        <strong>{t(label)}</strong>
+        {description && <small>{t(description)}</small>}
       </span>
       <span className="toggle">
         <i />
@@ -92,10 +94,10 @@ export default function SettingsPage({
   onInstall,
 }: Props) {
   const tools = [
-    ["yt-dlp", "Загрузка видео и получение форматов", deps?.ytDlp],
-    ["FFmpeg", "Конвертация и объединение дорожек", deps?.ffmpeg],
-    ["ffprobe", "Проверка длительности и медиадорожек", deps?.ffprobe],
-    ["Deno", "JavaScript для извлечения видео YouTube", deps?.deno],
+    ["yt-dlp", t("Загрузка видео и получение форматов"), deps?.ytDlp],
+    ["FFmpeg", t("Конвертация и объединение дорожек"), deps?.ffmpeg],
+    ["ffprobe", t("Проверка длительности и медиадорожек"), deps?.ffprobe],
+    ["Deno", t("JavaScript для извлечения видео YouTube"), deps?.deno],
   ] as const;
 
   return (
@@ -106,12 +108,19 @@ export default function SettingsPage({
             <Palette size={18} />
           </span>
           <div>
-            <h2>Внешний вид</h2>
-            <p>Тема, иконки и движение интерфейса.</p>
+            <h2>{t("Внешний вид")}</h2>
+            <p>{t("Тема, иконки и движение интерфейса.")}</p>
           </div>
         </div>
-        <span className="field-label">Тема</span>
-        <div className="theme-options" role="radiogroup" aria-label="Тема">
+        <div className="settings-language">
+          <div>
+            <span className="field-label">{t("Язык интерфейса")}</span>
+            <p>{t("Изменения применяются сразу.")}</p>
+          </div>
+          <LanguageSwitch />
+        </div>
+        <span className="field-label">{t("Тема")}</span>
+        <div className="theme-options" role="radiogroup" aria-label={t("Тема")}>
           {themeOptions.map(([theme, label, Icon]) => (
             <button
               key={theme}
@@ -130,16 +139,16 @@ export default function SettingsPage({
               </span>
               <span className="theme-card-label">
                 <Icon size={15} />
-                {label}
+                {t(label)}
                 <span className="radio" />
               </span>
             </button>
           ))}
         </div>
-        <span className="field-label">Иконки</span>
+        <span className="field-label">{t("Иконки")}</span>
         <div className="icon-style-row">
           <Segmented
-            label="Стиль иконок"
+            label={t("Стиль иконок")}
             value={appearance.iconStyle}
             onChange={(iconStyle) => onAppearance({ ...appearance, iconStyle })}
             options={iconOptions}
@@ -151,17 +160,17 @@ export default function SettingsPage({
             <Sparkles size={20} />
           </div>
         </div>
-        <span className="field-label">Толщина линий</span>
+        <span className="field-label">{t("Толщина линий")}</span>
         <Segmented
-          label="Толщина линий"
+          label={t("Толщина линий")}
           value={String(appearance.stroke)}
           onChange={(value) =>
             onAppearance({ ...appearance, stroke: Number(value) })
           }
           options={[
-            ["1.5", "Тонкие"],
-            ["1.75", "Средние"],
-            ["2", "Плотные"],
+            ["1.5", t("Тонкие")],
+            ["1.75", t("Средние")],
+            ["2", t("Плотные")],
           ]}
         />
         <Toggle
@@ -169,8 +178,8 @@ export default function SettingsPage({
           onChange={() =>
             onAppearance({ ...appearance, motion: !appearance.motion })
           }
-          label="Анимации"
-          description="Плавные переходы, появление элементов и смена темы."
+          label={t("Анимации")}
+          description={t("Плавные переходы, появление элементов и смена темы.")}
         />
       </section>
 
@@ -180,11 +189,11 @@ export default function SettingsPage({
             <Folder size={18} />
           </span>
           <div>
-            <h2>Сохранение файлов</h2>
-            <p>Параметры для новых загрузок.</p>
+            <h2>{t("Сохранение файлов")}</h2>
+            <p>{t("Параметры для новых загрузок.")}</p>
           </div>
         </div>
-        <span className="field-label">Папка по умолчанию</span>
+        <span className="field-label">{t("Папка по умолчанию")}</span>
         <button
           className="settings-folder"
           onClick={(event) => {
@@ -200,15 +209,15 @@ export default function SettingsPage({
         >
           <Folder size={17} />
           <span>
-            {prefs.folder ? cleanPath(prefs.folder) : "Выбрать папку загрузок"}
+            {prefs.folder ? cleanPath(prefs.folder) : t("Выбрать папку загрузок")}
           </span>
           <ChevronRight size={15} />
         </button>
         <Toggle
           checked={prefs.metadata}
           onChange={() => setPrefs((p) => ({ ...p, metadata: !p.metadata }))}
-          label="Сохранять метаданные"
-          description="Название, автор и главы, если формат их поддерживает."
+          label={t("Сохранять метаданные")}
+          description={t("Название, автор и главы, если формат их поддерживает.")}
         />
       </section>
 
@@ -218,15 +227,15 @@ export default function SettingsPage({
             <SlidersHorizontal size={18} />
           </span>
           <div>
-            <h2>Компоненты приложения</h2>
-            <p>Локальные инструменты для скачивания и обработки.</p>
+            <h2>{t("Компоненты приложения")}</h2>
+            <p>{t("Локальные инструменты для скачивания и обработки.")}</p>
           </div>
           <button
             className="icon-button"
             onClick={onCheck}
             disabled={checking || !desktop}
-            aria-label="Проверить компоненты"
-            data-tooltip="Повторить проверку"
+            aria-label={t("Проверить компоненты")}
+            data-tooltip={t("Повторить проверку")}
           >
             <RotateCcw size={17} className={checking ? "spin" : ""} />
           </button>
@@ -239,11 +248,11 @@ export default function SettingsPage({
               </span>
               <div>
                 <strong>{name}</strong>
-                <p>{description}</p>
+                <p>{t(description)}</p>
                 {path && <small title={path}>{cleanPath(path)}</small>}
               </div>
               <span className="dependency-status">
-                {path ? "Готов" : desktop ? "Не найден" : "Desktop"}
+                {path ? t("Готов") : desktop ? t("Не найден") : "Desktop"}
               </span>
             </div>
           ))}
@@ -251,19 +260,17 @@ export default function SettingsPage({
         <div className="setup-note">
           <Info size={16} />
           <span>
-            Недостающие компоненты устанавливаются при запуске. При ошибке
-            можно повторить установку или открыть инструкцию выше.
-          </span>
+            {t("Недостающие компоненты устанавливаются при запуске. При ошибке можно повторить установку или открыть инструкцию выше.")}</span>
           <button
             className="button ghost small"
             disabled={!desktop || installing || ready}
             onClick={onInstall}
           >
             {installing
-              ? "Устанавливаем…"
+              ? t("Устанавливаем…")
               : ready
-                ? "Все компоненты готовы"
-                : "Установить компоненты"}
+                ? t("Все компоненты готовы")
+                : t("Установить компоненты")}
           </button>
         </div>
       </section>
@@ -272,12 +279,9 @@ export default function SettingsPage({
         <Logo size={44} />
         <div>
           <Wordmark />
-          <p>Версия 0.1.0 · Rust + Tauri v2 + Astro · Иконки Keyline Icons</p>
+          <p>{t("Версия 0.1.0 · Rust + Tauri v2 + Astro · Иконки Keyline Icons")}</p>
           <small>
-            Обработка идёт на вашем устройстве. FLAC и WAV сохраняют результат
-            декодирования и не восстанавливают качество, потерянное при сжатии
-            на YouTube.
-          </small>
+            {t("Обработка идёт на вашем устройстве. FLAC и WAV сохраняют результат декодирования и не восстанавливают качество, потерянное при сжатии на YouTube.")}</small>
         </div>
       </section>
     </div>

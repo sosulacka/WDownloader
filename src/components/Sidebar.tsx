@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Logo, { Wordmark } from "./Logo";
 import {
@@ -83,7 +84,7 @@ export default function Sidebar({
         </button>
         <Wordmark />
       </div>
-      <nav ref={nav} className="nav" aria-label="Основная навигация">
+      <nav ref={nav} className="nav" aria-label={t("Основная навигация")}>
         {indicator && (
           <span
             className="nav-indicator"
@@ -102,7 +103,7 @@ export default function Sidebar({
             onClick={() => onNavigate(target)}
           >
             <Icon size={18} />
-            <span>{label}</span>
+            <span>{t(label)}</span>
             {target === "downloads" && activeCount > 0 && (
               <span className="nav-badge live">{activeCount}</span>
             )}
@@ -115,12 +116,12 @@ export default function Sidebar({
       <div className="sidebar-bottom">
         <button className="side-link" onClick={onOpenFolder}>
           <FolderOpen size={17} />
-          <span>Папка загрузок</span>
+          <span>{t("Папка загрузок")}</span>
           <ArrowUpRight size={14} />
         </button>
         <button className="side-link" onClick={onHelp}>
           <Info size={17} />
-          <span>Как это работает</span>
+          <span>{t("Как это работает")}</span>
           <ArrowUpRight size={14} />
         </button>
       </div>

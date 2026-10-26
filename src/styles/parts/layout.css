@@ -314,8 +314,26 @@
   border: 1px solid var(--line-2);
 }
 .theme-flip-icon {
-  display: flex;
+  display: grid;
+  place-items: center;
+  view-transition-name: theme-toggle-icon;
   animation: theme-icon 0.55s var(--spring);
+}
+.theme-transition .theme-flip-icon {
+  animation: none;
+}
+/* Иконка движется отдельно от круговой смены фона. */
+::view-transition-group(theme-toggle-icon) {
+  z-index: 3;
+  animation-duration: 0.55s;
+}
+::view-transition-old(theme-toggle-icon) {
+  animation: none;
+  opacity: 0;
+}
+::view-transition-new(theme-toggle-icon) {
+  animation: theme-icon 0.55s var(--spring) both;
+  mix-blend-mode: normal;
 }
 @keyframes theme-icon {
   from {

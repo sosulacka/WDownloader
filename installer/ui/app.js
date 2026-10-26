@@ -1,3 +1,4 @@
+import { t, getLanguage, setLanguage, subscribeLanguage, initializeLanguage, localeTag } from "./i18n.js";
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 const win = window.__TAURI__.window.getCurrentWindow();
@@ -7,11 +8,16 @@ let info = null;
 let dir = "";
 let mode = "install";
 let busy = false;
+let finishLaunch = true;
+let lastProgress = null;
+const errors = new Map();
+
+initializeLanguage();
 
 const mb = (bytes) =>
   bytes >= 1073741824
-    ? `${(bytes / 1073741824).toFixed(1)} ГБ`
-    : `${Math.max(1, Math.round(bytes / 1048576))} МБ`;
+    ? t("{0} ГБ", { 0: (bytes / 1073741824).toLocaleString(localeTag(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })
+    : t("{0} МБ", { 0: Math.max(1, Math.round(bytes / 1048576)) });
 
 function show(name) {
   for (const screen of document.querySelectorAll(".screen")) {
@@ -35,15 +41,16 @@ function fact(term, value) {
   const row = document.createElement("div");
   const dt = document.createElement("dt");
   const dd = document.createElement("dd");
-  dt.textContent = term;
+  dt.textContent = t(term);
   dd.textContent = value;
   row.append(dt, dd);
   $("facts").append(row);
 }
 
 function error(id, text) {
+  errors.set(id, text);
   const el = $(id);
-  el.textContent = text;
+  el.textContent = t(text);
   el.hidden = !text;
 }
 
@@ -61,7 +68,13 @@ const stages = {
   done: "Готово",
 };
 let shown = 0;
+function paintProgress(payload) {
+  const label = t(stages[payload.stage] || "");
+  const file = ["Ярлыки", "Данные приложения"].includes(payload.file) ? t(payload.file) : payload.file;
+  $("current").textContent = file ? `${label} ${file}` : label;
+}
 listen("progress", ({ payload }) => {
+  lastProgress = payload;
   const value = Math.round(payload.progress);
   $("bar").style.transform = `scaleX(${payload.progress / 100})`;
   // Число догоняет реальный процент, а не прыгает.
@@ -73,24 +86,27 @@ listen("progress", ({ payload }) => {
     requestAnimationFrame(tick);
   };
   tick();
-  const label = stages[payload.stage] || "";
-  $("current").textContent = payload.file ? `${label} ${payload.file}` : label;
+  paintProgress(payload);
 });
 
 async function install() {
   error("setup-error", "");
   setBusy(true);
-  $("progress-step").textContent = "Установка";
   show("progress");
   try {
     await invoke("install", { dir, desktop: checked("desktop") });
     setBusy(false);
-    $("done-title").textContent = info.installed ? "Wdownloader обновлён" : "Wdownloader установлен";
+    finishLaunch = true;
     if (checked("launch")) {
-      await invoke("launch", { dir }).catch(() => {});
-      setTimeout(() => invoke("quit", { cleanup: false }), 1600);
-      $("finish-label").textContent = "Закрыть";
+      try {
+        await invoke("launch", { dir });
+        finishLaunch = false;
+        setTimeout(() => invoke("quit", { cleanup: false }), 1600);
+      } catch {
+        // Оставляем кнопку запуска, если сразу открыть не вышло.
+      }
     }
+    renderLanguage();
     show("done");
   } catch (e) {
     setBusy(false);
@@ -102,14 +118,12 @@ async function install() {
 async function uninstall() {
   error("confirm-error", "");
   setBusy(true);
-  $("progress-step").textContent = "Удаление";
   show("progress");
   try {
     await invoke("uninstall", { removeData: checked("remove-data") });
     setBusy(false);
-    $("done-title").textContent = "Wdownloader удалён";
-    $("done-lead").textContent = "Спасибо, что пользовались. Скачанные файлы на месте.";
-    $("finish-label").textContent = "Закрыть";
+    finishLaunch = false;
+    renderLanguage();
     show("done");
   } catch (e) {
     setBusy(false);
@@ -131,8 +145,53 @@ function paintThemeButton() {
   icon.style.animation = "none";
   void icon.offsetWidth;
   icon.style.animation = "";
-  $("theme").setAttribute("aria-label", dark ? "Светлая тема" : "Тёмная тема");
+  $("theme").setAttribute("aria-label", dark ? t("Светлая тема") : t("Тёмная тема"));
 }
+
+function renderLanguage() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+    el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel));
+  });
+  document.querySelectorAll("[data-language]").forEach((el) => {
+    el.setAttribute("aria-pressed", String(el.dataset.language === getLanguage()));
+  });
+  for (const [id, message] of errors) $(id).textContent = t(message);
+  const title = t(mode === "uninstall" ? "Удаление" : "Установка");
+  $("window-title").textContent = title;
+  document.title = `Wdownloader · ${title}`;
+  void win.setTitle(document.title).catch(() => {});
+  if (info) {
+    $("facts").replaceChildren();
+    if (mode === "uninstall") {
+      fact("Версия", info.version);
+      fact("Папка", t("Будет удалена"));
+      $("done-title").textContent = t("Wdownloader удалён");
+      $("done-lead").textContent = t("Спасибо, что пользовались. Скачанные файлы на месте.");
+    } else {
+      fact("Сборка", t(info.offline ? "Офлайн" : "Лёгкая"));
+      fact("Размер", info.size ? mb(info.size) : t("Нет данных"));
+      fact("Компоненты", t(info.offline ? "Внутри" : "Скачаются при запуске"));
+      $("size").textContent = info.size ? t("Займёт {0}", { 0: mb(info.size) }) : "";
+      if (info.installed) {
+        $("setup-title").textContent = t("Обновить Wdownloader");
+        $("setup-lead").textContent = t("Найдена установленная версия. Настройки и история сохранятся.");
+        $("install-label").textContent = t("Обновить");
+      }
+      $("done-title").textContent = t(info.installed ? "Wdownloader обновлён" : "Wdownloader установлен");
+    }
+  }
+  $("finish-label").textContent = t(finishLaunch && mode === "install" ? "Открыть Wdownloader" : "Закрыть");
+  if (lastProgress) paintProgress(lastProgress);
+  paintThemeButton();
+}
+
+document.querySelectorAll("[data-language]").forEach((button) => {
+  button.addEventListener("click", () => setLanguage(button.dataset.language));
+});
+subscribeLanguage(renderLanguage);
 
 function applyTheme(next) {
   document.documentElement.dataset.theme = next;
@@ -170,7 +229,7 @@ $("theme").addEventListener("click", (event) => {
     .catch(() => {})
     .finally(() => root.classList.remove("theme-transition"));
 });
-paintThemeButton();
+renderLanguage();
 
 // Пасхалка: три клика по логотипу, каждый не позже 600 мс после предыдущего.
 let taps = 0;
@@ -221,7 +280,7 @@ $("minimize").addEventListener("click", () => win.minimize());
 $("close").addEventListener("click", () => !busy && invoke("quit", { cleanup: false }));
 $("cancel").addEventListener("click", () => invoke("quit", { cleanup: false }));
 $("folder").addEventListener("click", async () => {
-  const picked = await invoke("pick_dir", { current: dir });
+  const picked = await invoke("pick_dir", { current: dir, language: getLanguage() });
   if (picked) {
     dir = picked;
     $("dir").textContent = dir;
@@ -230,7 +289,7 @@ $("folder").addEventListener("click", async () => {
 $("install").addEventListener("click", install);
 $("uninstall").addEventListener("click", uninstall);
 $("finish").addEventListener("click", async () => {
-  if (mode === "install" && $("finish-label").textContent.startsWith("Открыть"))
+  if (mode === "install" && finishLaunch)
     await invoke("launch", { dir }).catch(() => {});
   invoke("quit", { cleanup: mode === "uninstall" });
 });
@@ -244,26 +303,10 @@ document.addEventListener("contextmenu", (e) => e.preventDefault());
   $("version").textContent = info.version;
   $("dir").textContent = dir;
   $("uninstall-dir").textContent = dir;
-  if (mode === "uninstall") {
-    $("window-title").textContent = "Удаление";
-    $("hero-eyebrow").textContent = "Удаление";
-    fact("Версия", info.version);
-    fact("Папка", "Будет удалена");
-    show("confirm");
-    return;
-  }
-  fact("Сборка", info.offline ? "Офлайн" : "Лёгкая");
-  fact("Размер", info.size ? mb(info.size) : "Нет данных");
-  fact("Компоненты", info.offline ? "Внутри" : "Скачаются при запуске");
-  $("size").textContent = info.size ? `Займёт ${mb(info.size)}` : "";
-  if (info.installed) {
-    $("setup-title").textContent = "Обновить Wdownloader";
-    $("setup-lead").textContent = "Найдена установленная версия. Настройки и история сохранятся.";
-    $("install-label").textContent = "Обновить";
-  }
-  if (!info.ready) {
+  if (mode === "install" && !info.ready) {
     $("install").disabled = true;
     error("setup-error", "В этом файле нет приложения. Соберите установщик через npm run setup:build.");
   }
-  show("setup");
+  renderLanguage();
+  show(mode === "uninstall" ? "confirm" : "setup");
 })();

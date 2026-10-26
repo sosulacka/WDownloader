@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "A considered desktop video downloader"
 authors = ["Wdownloader"]
 edition = "2021"
+license = "GPL-3.0-only"
+repository = "https://github.com/sosulacka/WDownloader"
 
 [lib]
 name = "wdownloader_lib"

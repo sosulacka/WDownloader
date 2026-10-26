@@ -1,9 +1,9 @@
 //! Собирает setup.exe: stub + zip с приложением (+ tools для офлайн-версии).
-//! pack --setup <stub.exe> --app <Wdownloader.exe> [--tools <dir>] --out <file>
+//! pack --setup <stub.exe> --app <Wdownloader.exe> --license <file> --notice <file> --licenses <dir> [--tools <dir>] --out <file>
 
 use std::fs::File;
 use std::io::{self, Seek, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use zip::write::SimpleFileOptions;
 
 #[path = "payload.rs"]
@@ -18,13 +18,36 @@ fn arg(name: &str) -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
+fn collect_licenses(root: &Path, dir: &Path, files: &mut Vec<(String, PathBuf)>) -> io::Result<()> {
+    let mut entries = std::fs::read_dir(dir)?.collect::<Result<Vec<_>, _>>()?;
+    entries.sort_by_key(|entry| entry.file_name());
+    for entry in entries {
+        let path = entry.path();
+        if entry.file_type()?.is_dir() {
+            collect_licenses(root, &path, files)?;
+        } else if entry.file_type()?.is_file() {
+            let relative = path.strip_prefix(root).unwrap().to_string_lossy().replace('\\', "/");
+            files.push((format!("licenses/{relative}"), path));
+        }
+    }
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
     let setup = arg("--setup").expect("--setup <stub.exe>");
     let app = arg("--app").expect("--app <Wdownloader.exe>");
     let out = arg("--out").expect("--out <file>");
     let tools = arg("--tools");
+    let license = arg("--license").expect("--license <file>");
+    let notice = arg("--notice").expect("--notice <file>");
+    let licenses = arg("--licenses").expect("--licenses <dir>");
 
-    let mut files = vec![("Wdownloader.exe".to_string(), app)];
+    let mut files = vec![
+        ("Wdownloader.exe".to_string(), app),
+        ("LICENSE".to_string(), license),
+        ("NOTICE".to_string(), notice),
+    ];
+    collect_licenses(&licenses, &licenses, &mut files)?;
     if let Some(dir) = tools {
         let mut entries: Vec<_> = std::fs::read_dir(&dir)?
             .filter_map(Result::ok)

@@ -9,13 +9,17 @@
   </head>
   <body>
     <div class="titlebar" data-tauri-drag-region>
-      <span class="titlebar-name" data-tauri-drag-region id="window-title">Установка</span>
+      <span class="titlebar-name" data-tauri-drag-region id="window-title" data-i18n="Установка">Установка</span>
       <div class="titlebar-controls">
-        <button id="theme" aria-label="Светлая тема"><span class="theme-icon" id="theme-icon"></span></button>
-        <button id="minimize" aria-label="Свернуть">
+        <div class="language-switch" role="group" aria-label="Язык интерфейса" data-i18n-aria-label="Язык интерфейса">
+          <button type="button" data-language="ru" aria-pressed="true">RU</button>
+          <button type="button" data-language="en" aria-pressed="false">EN</button>
+        </div>
+        <button id="theme" aria-label="Светлая тема" data-i18n-aria-label="Светлая тема"><span class="theme-icon" id="theme-icon"></span></button>
+        <button id="minimize" aria-label="Свернуть" data-i18n-aria-label="Свернуть">
           <svg viewBox="0 0 24 24"><path d="M5 12H19" /></svg>
         </button>
-        <button id="close" class="close" aria-label="Закрыть">
+        <button id="close" class="close" aria-label="Закрыть" data-i18n-aria-label="Закрыть">
           <svg viewBox="0 0 24 24"><path d="M7 7L17 17M17 7L7 17" /></svg>
         </button>
       </div>
@@ -36,9 +40,8 @@
           />
         </svg>
         <div class="hero-text" data-tauri-drag-region>
-          <span class="eyebrow" id="hero-eyebrow">Установка</span>
           <h1>WDOWNLOADER</h1>
-          <p>Видео и аудио с YouTube в нужном формате.</p>
+          <p data-i18n="Видео и аудио с YouTube в нужном формате.">Видео и аудио с YouTube в нужном формате.</p>
         </div>
         <dl class="facts" id="facts"></dl>
         <span class="credit">WTEAM · v<span id="version"></span></span>
@@ -47,27 +50,26 @@
       <section class="panel">
         <!-- Установка: параметры -->
         <div class="screen" data-screen="setup">
-          <span class="step">01 <i></i> Параметры</span>
-          <h2 id="setup-title">Куда установить</h2>
-          <p class="lead" id="setup-lead">Права администратора не нужны.</p>
+          <h2 id="setup-title" data-i18n="Куда установить">Куда установить</h2>
+          <p class="lead" id="setup-lead" data-i18n="Права администратора не нужны.">Права администратора не нужны.</p>
           <button class="folder" id="folder">
             <svg viewBox="0 0 24 24"><path d="M3 7C3 5.3431 4.3431 4 6 4L8.6716 4C9.202 4 9.7107 4.2107 10.0858 4.5858L11.4142 5.9142C11.7893 6.2893 12.298 6.5 12.8284 6.5L18 6.5C19.6569 6.5 21 7.8431 21 9.5L21 17C21 18.6569 19.6569 20 18 20L6 20C4.3431 20 3 18.6569 3 17Z" /></svg>
             <span id="dir"></span>
-            <small>Изменить</small>
+            <small data-i18n="Изменить">Изменить</small>
           </button>
           <button class="toggle-row" id="desktop" role="switch" aria-checked="true">
-            <span><strong>Ярлык на рабочем столе</strong><small>В меню Пуск ярлык появится всегда.</small></span>
+            <span><strong data-i18n="Ярлык на рабочем столе">Ярлык на рабочем столе</strong><small data-i18n="В меню Пуск ярлык появится всегда.">В меню Пуск ярлык появится всегда.</small></span>
             <span class="toggle"><i></i></span>
           </button>
           <button class="toggle-row" id="launch" role="switch" aria-checked="true">
-            <span><strong>Запустить после установки</strong><small>Откроем приложение сразу.</small></span>
+            <span><strong data-i18n="Запустить после установки">Запустить после установки</strong><small data-i18n="Откроем приложение сразу.">Откроем приложение сразу.</small></span>
             <span class="toggle"><i></i></span>
           </button>
           <p class="error" id="setup-error" hidden></p>
           <div class="actions">
             <span class="size" id="size"></span>
             <button class="button primary" id="install">
-              <span id="install-label">Установить</span>
+              <span id="install-label" data-i18n="Установить">Установить</span>
               <svg viewBox="0 0 24 24"><path d="M5 12H18.0587M12.1229 5L18.8261 11.5875C19.058 11.8153 19.058 12.1847 18.8261 12.4125L12.1229 19" /></svg>
             </button>
           </div>
@@ -75,22 +77,21 @@
 
         <!-- Удаление: подтверждение -->
         <div class="screen" data-screen="confirm">
-          <span class="step">01 <i></i> Удаление</span>
-          <h2>Удалить Wdownloader?</h2>
-          <p class="lead">Скачанные видео и аудио останутся на месте.</p>
+          <h2 data-i18n="Удалить Wdownloader?">Удалить Wdownloader?</h2>
+          <p class="lead" data-i18n="Скачанные видео и аудио останутся на месте.">Скачанные видео и аудио останутся на месте.</p>
           <div class="folder static">
             <svg viewBox="0 0 24 24"><path d="M3 7C3 5.3431 4.3431 4 6 4L8.6716 4C9.202 4 9.7107 4.2107 10.0858 4.5858L11.4142 5.9142C11.7893 6.2893 12.298 6.5 12.8284 6.5L18 6.5C19.6569 6.5 21 7.8431 21 9.5L21 17C21 18.6569 19.6569 20 18 20L6 20C4.3431 20 3 18.6569 3 17Z" /></svg>
             <span id="uninstall-dir"></span>
           </div>
           <button class="toggle-row" id="remove-data" role="switch" aria-checked="false">
-            <span><strong>Удалить настройки и историю</strong><small>Также компоненты, скачанные приложением.</small></span>
+            <span><strong data-i18n="Удалить настройки и историю">Удалить настройки и историю</strong><small data-i18n="Также компоненты, скачанные приложением.">Также компоненты, скачанные приложением.</small></span>
             <span class="toggle"><i></i></span>
           </button>
           <p class="error" id="confirm-error" hidden></p>
           <div class="actions">
-            <button class="button ghost" id="cancel">Отмена</button>
+            <button class="button ghost" id="cancel" data-i18n="Отмена">Отмена</button>
             <button class="button primary" id="uninstall">
-              Удалить
+              <span data-i18n="Удалить">Удалить</span>
               <svg viewBox="0 0 24 24"><path d="M10 2H14M4 7H20M6 7H18V19C18 20.6569 16.6569 22 15 22H9C7.34315 22 6 20.6569 6 19V7ZM10 11L10 18M14 11L14 18" /></svg>
             </button>
           </div>
@@ -98,24 +99,22 @@
 
         <!-- Прогресс -->
         <div class="screen" data-screen="progress">
-          <span class="step">02 <i></i> <span id="progress-step">Установка</span></span>
           <div class="percent"><span id="percent">0</span><small>%</small></div>
           <div class="track"><i id="bar"></i></div>
-          <p class="current" id="current">Готовим установку…</p>
+          <p class="current" id="current" data-i18n="Готовим установку…">Готовим установку…</p>
         </div>
 
         <!-- Готово -->
         <div class="screen" data-screen="done">
-          <span class="step">03 <i></i> Готово</span>
           <span class="done-mark">
             <svg viewBox="0 0 24 24"><path d="M5 12L9.66667 17L19 7" pathLength="1" /></svg>
           </span>
-          <h2 id="done-title">Wdownloader установлен</h2>
-          <p class="lead" id="done-lead">Ярлык в меню Пуск. Удалить можно в параметрах Windows.</p>
+          <h2 id="done-title" data-i18n="Wdownloader установлен">Wdownloader установлен</h2>
+          <p class="lead" id="done-lead" data-i18n="Ярлык в меню Пуск. Удалить можно в параметрах Windows.">Ярлык в меню Пуск. Удалить можно в параметрах Windows.</p>
           <div class="actions">
             <span></span>
             <button class="button primary" id="finish">
-              <span id="finish-label">Открыть Wdownloader</span>
+              <span id="finish-label" data-i18n="Открыть Wdownloader">Открыть Wdownloader</span>
               <svg viewBox="0 0 24 24"><path d="M6 6H17.5C17.77614 6 18 6.22386 18 6.5V18M7.2 16.8L17.4 6.6" /></svg>
             </button>
           </div>
@@ -125,7 +124,7 @@
     <!-- Пасхалка: тройной клик по логотипу -->
     <div class="credits-backdrop" id="credits" hidden>
       <section class="credits" role="dialog" aria-modal="true" aria-labelledby="credits-title">
-        <button class="credits-close" id="credits-close" aria-label="Закрыть">
+        <button class="credits-close" id="credits-close" aria-label="Закрыть" data-i18n-aria-label="Закрыть">
           <svg viewBox="0 0 24 24"><path d="M7 7L17 17M17 7L7 17" /></svg>
         </button>
         <span class="credits-logo">
@@ -148,7 +147,7 @@
           <span style="--i: 2">WTEAM</span>
         </h2>
         <dl class="credits-list">
-          <div><dt>Разработчик</dt><dd>CYN</dd></div>
+          <div><dt data-i18n="Разработчик">Разработчик</dt><dd>CYN</dd></div>
           <div><dt>Discord</dt><dd>@syswow64deleted</dd></div>
         </dl>
         <button class="credits-link" id="credits-site">
@@ -157,6 +156,6 @@
         </button>
       </section>
     </div>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>

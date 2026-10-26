@@ -1,3 +1,4 @@
+import { t, initializeLanguage, useLanguage } from "../lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { invoke, isTauri } from "@tauri-apps/api/core";
@@ -5,6 +6,7 @@ import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import Titlebar from "./Titlebar";
 import Sidebar from "./Sidebar";
+import LanguageSwitch from "./LanguageSwitch";
 import DownloadPanel from "./DownloadPanel";
 import JobList from "./JobList";
 import SettingsPage from "./SettingsPage";
@@ -45,22 +47,23 @@ import type { ClipRange } from "../lib/media";
 
 type Toast = { id: number; text: string; tone: "info" | "error" };
 
-const pages: Record<Page, { title: [string, string]; text: string }> = {
+const pages: Record<Page, { title: string; text: string }> = {
   downloads: {
-    title: ["Сохраните", "нужное."],
+    title: "Сохраните нужное.",
     text: "Видео или только звук. В нужном качестве и формате.",
   },
   history: {
-    title: ["История", "загрузок."],
+    title: "История загрузок.",
     text: "Загруженные файлы, отмены и повторные попытки.",
   },
   settings: {
-    title: ["Всё", "под контролем."],
+    title: "Всё под контролем.",
     text: "Папка, внешний вид и компоненты приложения.",
   },
 };
 
 export default function App() {
+  useLanguage();
   const [page, setPage] = useState<Page>("downloads");
   const [prefs, setPrefs] = useState<Prefs>(defaultPrefs);
   const [appearance, setAppearance] = useState<Appearance>(defaultAppearance);
@@ -106,6 +109,7 @@ export default function App() {
   }
 
   useEffect(() => {
+    initializeLanguage();
     try {
       const saved = JSON.parse(
         localStorage.getItem("wd-preferences") || "null",
@@ -267,7 +271,7 @@ export default function App() {
     }
     if (!desktop) {
       setError(
-        "Откройте настольное приложение: npm run desktop. Браузер показывает только интерфейс.",
+        t("Откройте настольное приложение: npm run desktop. Браузер показывает только интерфейс."),
       );
       return;
     }
@@ -292,20 +296,20 @@ export default function App() {
       changeUrl(await navigator.clipboard.readText());
       urlRef.current?.focus();
     } catch {
-      notify("Нажмите Ctrl+V в поле ссылки.");
+      notify(t("Нажмите Ctrl+V в поле ссылки."));
       urlRef.current?.focus();
     }
   }
   async function chooseFolder() {
     if (!desktop) {
-      notify("Выбор папки доступен в настольном приложении.");
+      notify(t("Выбор папки доступен в настольном приложении."));
       return;
     }
     try {
       const selected = await open({
         directory: true,
         multiple: false,
-        title: "Папка для загрузок",
+        title: t("Папка для загрузок"),
       });
       if (typeof selected === "string")
         setPrefs((p) => ({ ...p, folder: selected }));
@@ -316,9 +320,9 @@ export default function App() {
   async function addDownload(request?: Request) {
     if (adding || (!video && !request)) return;
     if (!ready) {
-      setError("Проверьте yt-dlp, FFmpeg и Deno в настройках приложения.");
+      setError(t("Проверьте yt-dlp, FFmpeg и Deno в настройках приложения."));
       if (page !== "downloads")
-        notify("Проверьте компоненты в настройках.", "error");
+        notify(t("Проверьте компоненты в настройках."), "error");
       return;
     }
     const format =
@@ -341,7 +345,7 @@ export default function App() {
       setJobs((previous) =>
         previous.some((j) => j.id === job.id) ? previous : [job, ...previous],
       );
-      notify("Загрузка добавлена в очередь");
+      notify(t("Загрузка добавлена в очередь"));
     } catch (e) {
       setError(errorText(e));
       if (page !== "downloads") notify(errorText(e), "error");
@@ -351,7 +355,7 @@ export default function App() {
   }
   async function action(command: string, args?: Record<string, unknown>) {
     if (!desktop) {
-      notify("Откройте настольную версию приложения.");
+      notify(t("Откройте настольную версию приложения."));
       return false;
     }
     try {
@@ -376,7 +380,7 @@ export default function App() {
       setDeps(result);
       if (result.ytDlp && result.ffmpeg && result.ffprobe && result.deno)
         setInstallError(null);
-      notify("Проверка компонентов завершена");
+      notify(t("Проверка компонентов завершена"));
     } catch (e) {
       notify(errorText(e), "error");
     } finally {
@@ -413,6 +417,7 @@ export default function App() {
   }
 
   const heading = pages[page];
+  const [titleStart, ...titleRest] = t(heading.title).split(" ");
 
   return (
     <IconContext.Provider
@@ -432,15 +437,16 @@ export default function App() {
         <div className="main-shell" ref={mainRef}>
           <header className="topbar">
             <div className="topbar-right">
+              <LanguageSwitch />
               <span className="shortcut-hint">
                 <kbd>Ctrl</kbd>
                 <kbd>L</kbd>
-                <span>ссылка</span>
+                <span>{t("ссылка")}</span>
               </span>
               <button
                 className="icon-button theme-flip"
-                aria-label={dark ? "Светлая тема" : "Тёмная тема"}
-                data-tooltip={dark ? "Светлая тема" : "Тёмная тема"}
+                aria-label={dark ? t("Светлая тема") : t("Тёмная тема")}
+                data-tooltip={dark ? t("Светлая тема") : t("Тёмная тема")}
                 onClick={(event) =>
                   changeAppearance(
                     { ...appearance, theme: dark ? "light" : "dark" },
@@ -458,18 +464,18 @@ export default function App() {
             <div className="page-heading">
               <div>
                 <h1>
-                  {heading.title[0]} <span>{heading.title[1]}</span>
+                  {titleStart} <span>{titleRest.join(" ")}</span>
                 </h1>
-                <p>{heading.text}</p>
+                <p>{t(heading.text)}</p>
               </div>
               {page !== "settings" && (
                 <dl className="heading-stats">
                   <div>
-                    <dt>В работе</dt>
+                    <dt>{t("В работе")}</dt>
                     <dd>{active.length}</dd>
                   </div>
                   <div>
-                    <dt>Готово</dt>
+                    <dt>{t("Готово")}</dt>
                     <dd>{completed.length}</dd>
                   </div>
                 </dl>
@@ -559,11 +565,11 @@ export default function App() {
             ) : (
               <Check size={17} />
             )}
-            <span>{toast.text}</span>
+            <span>{t(toast.text)}</span>
             <button
               className="icon-button"
               onClick={() => setToast(null)}
-              aria-label="Закрыть уведомление"
+              aria-label={t("Закрыть уведомление")}
             >
               <X size={15} />
             </button>

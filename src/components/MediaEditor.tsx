@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { useEffect, useId, useRef, useState } from "react";
 import { convertFileSrc, invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -67,7 +68,7 @@ function TimeField({
   }
   return (
     <label className={`time-field ${invalid ? "invalid" : ""}`}>
-      <span>{label}</span>
+      <span>{t(label)}</span>
       <input
         value={text}
         onChange={(e) => {
@@ -85,12 +86,12 @@ function TimeField({
             setInvalid(false);
           }
         }}
-        aria-label={label}
+        aria-label={t(label)}
         aria-invalid={invalid}
         inputMode="decimal"
         spellCheck={false}
       />
-      <small>{invalid ? "Формат 00:00.0" : "мин : сек"}</small>
+      <small>{invalid ? t("Формат 00:00.0") : t("мин : сек")}</small>
     </label>
   );
 }
@@ -164,7 +165,7 @@ export default function MediaEditor({
   async function prepare() {
     if (pending) return;
     if (!isTauri()) {
-      setError("Предпросмотр доступен в настольном приложении.");
+      setError(t("Предпросмотр доступен в настольном приложении."));
       return;
     }
     const id = crypto.randomUUID();
@@ -222,7 +223,7 @@ export default function MediaEditor({
         await media.current.play();
       } catch {
         setError(
-          "Не удалось начать воспроизведение. Повторите подготовку предпросмотра.",
+          t("Не удалось начать воспроизведение. Повторите подготовку предпросмотра."),
         );
       }
     } else media.current.pause();
@@ -305,7 +306,7 @@ export default function MediaEditor({
     onError: () => {
       if (preview)
         setError(
-          "Не удалось открыть медиадорожку. Проверьте файл или подготовьте предпросмотр заново.",
+          t("Не удалось открыть медиадорожку. Проверьте файл или подготовьте предпросмотр заново."),
         );
     },
   };
@@ -314,12 +315,12 @@ export default function MediaEditor({
     <section
       ref={editor}
       className={`media-editor ${source.kind === "audio" ? "audio-editor" : ""}`}
-      aria-label="Предпросмотр и обрезка"
+      aria-label={t("Предпросмотр и обрезка")}
     >
       <div className="editor-heading">
         <span>
           <Play size={14} />
-          {source.kind === "audio" ? "АУДИОПЛЕЕР" : "ВИДЕОПЛЕЕР"}
+          {source.kind === "audio" ? t("АУДИОПЛЕЕР") : t("ВИДЕОПЛЕЕР")}
         </span>
         {onClipChange && (
           <button
@@ -331,8 +332,7 @@ export default function MediaEditor({
             }}
           >
             <Scissors size={15} />
-            Обрезать фрагмент
-            <span className="mini-toggle">
+            {t("Обрезать фрагмент")}<span className="mini-toggle">
               <i />
             </span>
           </button>
@@ -354,7 +354,7 @@ export default function MediaEditor({
               {source.thumbnail && (
                 <img
                   src={source.thumbnail}
-                  alt="Превью видео"
+                  alt={t("Превью видео")}
                   referrerPolicy="no-referrer"
                 />
               )}
@@ -362,7 +362,7 @@ export default function MediaEditor({
               {!pending && (
                 <button className="preview-play" onClick={() => void prepare()}>
                   <Play size={22} />
-                  <span>Подготовить просмотр</span>
+                  <span>{t("Подготовить просмотр")}</span>
                 </button>
               )}
             </>
@@ -370,13 +370,13 @@ export default function MediaEditor({
           {pending && (
             <div className="preview-pending">
               <LoaderCircle size={25} className="spin" />
-              <strong>{stages[progress?.stage || "queued"]}</strong>
+              <strong>{t(stages[progress?.stage || "queued"] || "Подготовка")}</strong>
               {progress?.progress !== null &&
                 progress?.progress !== undefined && (
                   <span>{Math.round(progress.progress)}%</span>
                 )}
               <button className="text-button" onClick={cancel}>
-                Отменить <X size={13} />
+                {t("Отменить")}{" "}<X size={13} />
               </button>
             </div>
           )}
@@ -396,17 +396,17 @@ export default function MediaEditor({
             <>
               <LoaderCircle className="spin" size={20} />
               <div>
-                <strong>{stages[progress?.stage || "queued"]}</strong>
+                <strong>{t(stages[progress?.stage || "queued"] || "Подготовка")}</strong>
                 <small>
                   {progress?.progress != null
                     ? `${Math.round(progress.progress)}%`
-                    : "Можно отменить в любой момент"}
+                    : t("Можно отменить в любой момент")}
                 </small>
               </div>
               <button
                 className="icon-button"
                 onClick={cancel}
-                aria-label="Отменить подготовку"
+                aria-label={t("Отменить подготовку")}
               >
                 <X size={17} />
               </button>
@@ -415,16 +415,15 @@ export default function MediaEditor({
             <>
               <Headphones size={24} />
               <div>
-                <strong>Услышьте, прежде чем сохранить</strong>
-                <small>Подготовим аудио и настоящую звуковую волну.</small>
+                <strong>{t("Услышьте, прежде чем сохранить")}</strong>
+                <small>{t("Подготовим аудио и настоящую звуковую волну.")}</small>
               </div>
               <button
                 className="button ghost small"
                 onClick={() => void prepare()}
               >
                 <Play size={14} />
-                Прослушать
-              </button>
+                {t("Прослушать")}</button>
             </>
           )}
         </div>
@@ -432,7 +431,7 @@ export default function MediaEditor({
       {error && (
         <div className="editor-error" role="alert">
           <CircleAlert size={16} />
-          <span>{error}</span>
+          <span>{t(error)}</span>
           <button
             className="text-button"
             onClick={() => {
@@ -440,21 +439,20 @@ export default function MediaEditor({
               void prepare();
             }}
           >
-            Повторить
-          </button>
+            {t("Повторить")}</button>
         </div>
       )}
       <div className="editor-body">
         <div className="timeline-topline">
-          <span>{clip ? "СОХРАНИТСЯ ВЫДЕЛЕННАЯ ЧАСТЬ" : "ШКАЛА ВРЕМЕНИ"}</span>
+          <span>{clip ? t("СОХРАНИТСЯ ВЫДЕЛЕННАЯ ЧАСТЬ") : t("ШКАЛА ВРЕМЕНИ")}</span>
           {clip && (
             <div className="click-modes">
-              <span>Клик:</span>
+              <span>{t("Клик:")}</span>
               {(
                 [
-                  ["seek", "Позиция"],
-                  ["start", "Начало"],
-                  ["end", "Конец"],
+                  ["seek", t("Позиция")],
+                  ["start", t("Начало")],
+                  ["end", t("Конец")],
                 ] as const
               ).map(([mode, label]) => (
                 <button
@@ -463,7 +461,7 @@ export default function MediaEditor({
                   className={clickMode === mode ? "active" : ""}
                   aria-pressed={clickMode === mode}
                 >
-                  {label}
+                  {t(label)}
                 </button>
               ))}
             </div>
@@ -477,7 +475,7 @@ export default function MediaEditor({
           onPointerUp={() => setDragging(null)}
           onPointerCancel={() => setDragging(null)}
           role="group"
-          aria-label="Шкала времени"
+          aria-label={t("Шкала времени")}
         >
           <div className="timeline-grid" />
           {preview ? (
@@ -485,7 +483,7 @@ export default function MediaEditor({
               className="waveform"
               viewBox="0 0 1200 140"
               preserveAspectRatio="none"
-              aria-label="Звуковая волна"
+              aria-label={t("Звуковая волна")}
             >
               <defs>
                 <clipPath id={waveformId}>
@@ -509,8 +507,8 @@ export default function MediaEditor({
             <div className="waveform-placeholder">
               <span>
                 {pending
-                  ? "Подготавливаем дорожку…"
-                  : "Точные границы можно задать до загрузки предпросмотра"}
+                  ? t("Подготавливаем дорожку…")
+                  : t("Точные границы можно задать до загрузки предпросмотра")}
               </span>
             </div>
           )}
@@ -545,7 +543,7 @@ export default function MediaEditor({
                   type="button"
                   role="slider"
                   aria-label={
-                    which === "start" ? "Начало фрагмента" : "Конец фрагмента"
+                    which === "start" ? t("Начало фрагмента") : t("Конец фрагмента")
                   }
                   aria-valuemin={which === "start" ? 0 : range.start + 0.1}
                   aria-valuemax={which === "start" ? range.end - 0.1 : total}
@@ -592,7 +590,7 @@ export default function MediaEditor({
             onPointerMove={move}
             onPointerUp={() => setDragging(null)}
             role="slider"
-            aria-label="Позиция воспроизведения"
+            aria-label={t("Позиция воспроизведения")}
             aria-valuenow={current}
             aria-valuemin={0}
             aria-valuemax={total}
@@ -617,7 +615,7 @@ export default function MediaEditor({
             className="player-play"
             onClick={() => void togglePlayback()}
             disabled={!preview}
-            aria-label={playing ? "Пауза" : "Воспроизвести"}
+            aria-label={playing ? t("Пауза") : t("Воспроизвести")}
           >
             {playing ? <Pause size={18} /> : <Play size={18} />}
           </button>
@@ -629,7 +627,7 @@ export default function MediaEditor({
             <button
               className="icon-button"
               onClick={() => setVolume((v) => (v ? 0 : 0.8))}
-              aria-label={volume ? "Выключить звук" : "Включить звук"}
+              aria-label={volume ? t("Выключить звук") : t("Включить звук")}
             >
               {volume ? <Volume size={17} /> : <VolumeX size={17} />}
             </button>
@@ -641,7 +639,7 @@ export default function MediaEditor({
               step="0.01"
               value={volume}
               onChange={(e) => setVolume(Number(e.target.value))}
-              aria-label="Громкость"
+              aria-label={t("Громкость")}
               style={
                 {
                   "--range-progress": `${volume * 100}%`,
@@ -652,15 +650,15 @@ export default function MediaEditor({
           <button
             className={`icon-button loop-button ${loop ? "active" : ""}`}
             onClick={() => setLoop((v) => !v)}
-            aria-label="Повторять выделение"
+            aria-label={t("Повторять выделение")}
             aria-pressed={loop}
-            data-tooltip="Повторять выделение"
+            data-tooltip={t("Повторять выделение")}
           >
             <Repeat size={17} />
           </button>
           <div className="speed-select">
             <Select
-              label="Скорость воспроизведения"
+              label={t("Скорость воспроизведения")}
               value={speed}
               onChange={setSpeed}
             >
@@ -675,8 +673,8 @@ export default function MediaEditor({
             <button
               className="icon-button"
               disabled={!preview}
-              aria-label="Полный экран"
-              data-tooltip="Полный экран"
+              aria-label={t("Полный экран")}
+              data-tooltip={t("Полный экран")}
               onClick={() => void editor.current?.requestFullscreen()}
             >
               <Fullscreen size={17} />
@@ -688,14 +686,14 @@ export default function MediaEditor({
             <div>
               <TimeField
                 value={range.start}
-                label="Начало фрагмента"
+                label={t("Начало фрагмента")}
                 onChange={(value) => boundary("start", value)}
               />
               <button
                 className="set-boundary"
                 onClick={() => boundary("start", current)}
-                data-tooltip="Поставить начало в текущую позицию"
-                aria-label="Начало в текущей позиции"
+                data-tooltip={t("Поставить начало в текущую позицию")}
+                aria-label={t("Начало в текущей позиции")}
               >
                 [<span>←</span>
               </button>
@@ -704,20 +702,20 @@ export default function MediaEditor({
             <div>
               <TimeField
                 value={range.end}
-                label="Конец фрагмента"
+                label={t("Конец фрагмента")}
                 onChange={(value) => boundary("end", value)}
               />
               <button
                 className="set-boundary"
                 onClick={() => boundary("end", current)}
-                data-tooltip="Поставить конец в текущую позицию"
-                aria-label="Конец в текущей позиции"
+                data-tooltip={t("Поставить конец в текущую позицию")}
+                aria-label={t("Конец в текущей позиции")}
               >
                 <span>→</span>]
               </button>
             </div>
             <div className="trim-summary">
-              <span>Длительность фрагмента</span>
+              <span>{t("Длительность фрагмента")}</span>
               <strong>{timecode(range.end - range.start)}</strong>
               <button
                 className="text-button"
@@ -727,17 +725,16 @@ export default function MediaEditor({
                 }}
               >
                 <RotateCcw size={13} />
-                Сбросить
-              </button>
+                {t("Сбросить")}</button>
             </div>
           </div>
         )}
         <p className="editor-hint">
           {clip
-            ? "Тяните границы или задайте время вручную. Стрелки: 0,1 с, Shift + стрелки: 1 с."
+            ? t("Тяните границы или задайте время вручную. Стрелки: 0,1 с, Shift + стрелки: 1 с.")
             : source.jobId
-              ? "Воспроизведение локального файла. Громкость и скорость настраиваются."
-              : "Для предпросмотра загружается облегчённая копия. Итоговый файл сохранится в выбранном качестве."}
+              ? t("Воспроизведение локального файла. Громкость и скорость настраиваются.")
+              : t("Для предпросмотра загружается облегчённая копия. Итоговый файл сохранится в выбранном качестве.")}
         </p>
       </div>
     </section>

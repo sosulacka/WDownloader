@@ -9,3 +9,12 @@ tools/*
 .DS_Store
 installer/target/
 dist-installer/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+src-tauri/gen/schemas/
+installer/gen/schemas/

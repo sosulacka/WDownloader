@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import {
   Children,
   isValidElement,
@@ -39,7 +40,7 @@ export default function Select({
     .filter(isValidElement<{ value: string; children: React.ReactNode }>)
     .map((child) => ({
       value: String(child.props.value),
-      label: child.props.children,
+      label: typeof child.props.children === "string" ? t(child.props.children) : child.props.children,
     }));
 
   function show() {
@@ -106,7 +107,7 @@ export default function Select({
   }
   return (
     <div className="select-field">
-      <span id={`${id}-label`}>{label}</span>
+      <span id={`${id}-label`}>{t(label)}</span>
       <button
         ref={trigger}
         type="button"

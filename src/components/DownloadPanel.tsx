@@ -1,3 +1,4 @@
+import { t, localeTag } from "../lib/i18n";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import Select from "./Select";
 import MediaEditor from "./MediaEditor";
@@ -61,7 +62,7 @@ export default function DownloadPanel(props: Props) {
     }));
 
   return (
-    <section className="card download-panel" aria-label="Новая загрузка">
+    <section className="card download-panel" aria-label={t("Новая загрузка")}>
       <form
         onSubmit={props.onAnalyze}
         className={`url-form ${loading ? "busy" : ""}`}
@@ -72,8 +73,8 @@ export default function DownloadPanel(props: Props) {
             ref={props.urlRef}
             value={props.url}
             onChange={(e) => props.onUrlChange(e.target.value)}
-            placeholder="Вставьте ссылку на видео с YouTube"
-            aria-label="Ссылка на видео YouTube"
+            placeholder={t("Вставьте ссылку на видео с YouTube")}
+            aria-label={t("Ссылка на видео YouTube")}
             autoComplete="off"
             spellCheck={false}
           />
@@ -82,7 +83,7 @@ export default function DownloadPanel(props: Props) {
               className="icon-button"
               type="button"
               onClick={() => props.onUrlChange("")}
-              aria-label="Очистить ссылку"
+              aria-label={t("Очистить ссылку")}
             >
               <X size={15} />
             </button>
@@ -91,8 +92,8 @@ export default function DownloadPanel(props: Props) {
             className="icon-button"
             type="button"
             onClick={props.onPaste}
-            data-tooltip="Вставить из буфера"
-            aria-label="Вставить из буфера"
+            data-tooltip={t("Вставить из буфера")}
+            aria-label={t("Вставить из буфера")}
           >
             <ClipboardPaste size={18} />
           </button>
@@ -105,12 +106,10 @@ export default function DownloadPanel(props: Props) {
           {loading ? (
             <>
               <LoaderCircle className="spin" size={17} />
-              Анализируем
-            </>
+              {t("Анализируем")}</>
           ) : (
             <>
-              Найти
-              <ArrowRight size={17} />
+              {t("Найти")}<ArrowRight size={17} />
             </>
           )}
         </button>
@@ -120,10 +119,10 @@ export default function DownloadPanel(props: Props) {
       {props.error && (
         <div className="inline-error" role="alert">
           <CircleAlert size={17} />
-          <span>{props.error}</span>
+          <span>{t(props.error)}</span>
           <button
             className="icon-button"
-            aria-label="Закрыть ошибку"
+            aria-label={t("Закрыть ошибку")}
             onClick={props.onDismissError}
           >
             <X size={15} />
@@ -137,7 +136,7 @@ export default function DownloadPanel(props: Props) {
           <div className="video-card-body">
             <div className="skeleton text-skeleton" />
             <div className="skeleton text-skeleton short" />
-            <p>Получаем информацию и доступные разрешения…</p>
+            <p>{t("Получаем информацию и доступные разрешения…")}</p>
           </div>
         </div>
       )}
@@ -147,7 +146,7 @@ export default function DownloadPanel(props: Props) {
           <div className="thumbnail">
             <img
               src={video.thumbnail}
-              alt="Превью видео"
+              alt={t("Превью видео")}
               referrerPolicy="no-referrer"
             />
             <span>{duration(video.duration)}</span>
@@ -155,24 +154,22 @@ export default function DownloadPanel(props: Props) {
           <div className="video-card-body">
             <span className="found-label">
               <CircleCheck size={14} />
-              Видео найдено
-            </span>
+              {t("Видео найдено")}</span>
             <h2>{video.title}</h2>
             <p>
               {video.channel}
               {video.views !== null && (
                 <>
                   <span className="dot-sep" />
-                  {new Intl.NumberFormat("ru-RU", {
+                  {new Intl.NumberFormat(localeTag(), {
                     notation: "compact",
                   }).format(video.views)}{" "}
-                  просмотров
-                </>
+                  {t("просмотров")}</>
               )}
               {video.heights.length > 0 && (
                 <>
                   <span className="dot-sep" />
-                  до {Math.max(...video.heights)}p
+                  {t("до")}{" "}{Math.max(...video.heights)}p
                 </>
               )}
             </p>
@@ -182,12 +179,12 @@ export default function DownloadPanel(props: Props) {
 
       <div className="config-grid">
         <div className="config-block">
-          <span className="field-label">Что скачиваем</span>
-          <div className="kind-options" role="radiogroup" aria-label="Тип файла">
+          <span className="field-label">{t("Что скачиваем")}</span>
+          <div className="kind-options" role="radiogroup" aria-label={t("Тип файла")}>
             {(
               [
-                ["video", Video, "Видео + аудио", "Полная версия"],
-                ["audio", Headphones, "Только аудио", "Музыка и подкасты"],
+                ["video", Video, t("Видео + аудио"), t("Полная версия")],
+                ["audio", Headphones, t("Только аудио"), t("Музыка и подкасты")],
               ] as const
             ).map(([kind, Icon, title, text]) => (
               <button
@@ -212,8 +209,8 @@ export default function DownloadPanel(props: Props) {
         </div>
 
         <div className="config-block">
-          <span className="field-label">Формат</span>
-          <div className="format-chips" role="radiogroup" aria-label="Формат файла">
+          <span className="field-label">{t("Формат")}</span>
+          <div className="format-chips" role="radiogroup" aria-label={t("Формат файла")}>
             {formats.map((f) => (
               <button
                 key={f}
@@ -222,7 +219,7 @@ export default function DownloadPanel(props: Props) {
                 aria-checked={format === f}
                 className={`chip ${format === f ? "active" : ""}`}
                 onClick={() => setFormat(f)}
-                data-tooltip={formatHints[f]}
+                data-tooltip={t(formatHints[f])}
               >
                 {formatName(f)}
               </button>
@@ -230,11 +227,11 @@ export default function DownloadPanel(props: Props) {
           </div>
           {prefs.kind === "video" ? (
             <Select
-              label="Качество видео"
+              label={t("Качество видео")}
               value={props.quality}
               onChange={props.setQuality}
             >
-              <option value="best">Лучшее доступное</option>
+              <option value="best">{t("Лучшее доступное")}</option>
               {video?.heights.map((h) => (
                 <option key={h} value={h}>
                   {qualityLabel(h)}
@@ -243,16 +240,15 @@ export default function DownloadPanel(props: Props) {
             </Select>
           ) : (
             <Select
-              label="Качество аудио"
+              label={t("Качество аудио")}
               value={prefs.audioQuality}
               onChange={(v) => setPrefs((p) => ({ ...p, audioQuality: v }))}
               disabled={["wav", "flac"].includes(format)}
             >
-              <option value="best">Лучшее доступное</option>
+              <option value="best">{t("Лучшее доступное")}</option>
               {["320", "256", "192", "128"].map((q) => (
                 <option key={q} value={q}>
-                  {q} кбит/с
-                </option>
+                  {q} {" "}{t("кбит/с")}</option>
               ))}
             </Select>
           )}
@@ -278,16 +274,16 @@ export default function DownloadPanel(props: Props) {
         <button
           onClick={props.onChooseFolder}
           className="folder-path"
-          title={prefs.folder || "Выбрать папку"}
+          title={prefs.folder || t("Выбрать папку")}
         >
           <Folder size={16} />
-          <span className="folder-path-label">Сохранить в</span>
+          <span className="folder-path-label">{t("Сохранить в")}</span>
           <span className="folder-path-value">
             {prefs.folder
               ? cleanPath(prefs.folder)
               : props.desktop
-                ? "Определяем папку…"
-                : "Загрузки / Wdownloader"}
+                ? t("Определяем папку…")
+                : t("Загрузки / Wdownloader")}
           </span>
         </button>
         <button
@@ -302,8 +298,8 @@ export default function DownloadPanel(props: Props) {
               <ArrowDown size={18} />
             </span>
           )}
-          Скачать{" "}
-          {clip ? "фрагмент" : prefs.kind === "audio" ? "аудио" : "видео"}
+          {t("Скачать")}{" "}
+          {clip ? t("фрагмент") : prefs.kind === "audio" ? t("аудио") : t("видео")}
           <span className="button-format">{formatName(format)}</span>
         </button>
       </div>

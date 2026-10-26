@@ -440,3 +440,20 @@
   user-select: none;
   overflow-wrap: anywhere;
 }
+.settings-language {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 20px;
+}
+.settings-language .field-label {
+  margin-bottom: 4px;
+}
+.settings-language p {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.settings-language .segmented {
+  flex-shrink: 0;
+}

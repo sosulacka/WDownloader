@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { useEffect, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -41,23 +42,23 @@ export default function Titlebar({ busy = false }: { busy?: boolean }) {
       <div className="window-controls">
         <button
           onClick={() => perform("minimize")}
-          aria-label="Свернуть окно"
-          title="Свернуть"
+          aria-label={t("Свернуть окно")}
+          title={t("Свернуть")}
         >
           <Minus size={15} />
         </button>
         <button
           onClick={() => perform("toggleMaximize")}
-          aria-label={maximized ? "Восстановить окно" : "Развернуть окно"}
-          title={maximized ? "Восстановить" : "Развернуть"}
+          aria-label={maximized ? t("Восстановить окно") : t("Развернуть окно")}
+          title={maximized ? t("Восстановить") : t("Развернуть")}
         >
           <span className={`maximize-icon ${maximized ? "restored" : ""}`} />
         </button>
         <button
           className="window-close"
           onClick={() => perform("close")}
-          aria-label="Закрыть приложение"
-          title="Закрыть"
+          aria-label={t("Закрыть приложение")}
+          title={t("Закрыть")}
         >
           <X size={16} />
         </button>

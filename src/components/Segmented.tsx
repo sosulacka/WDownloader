@@ -1,3 +1,4 @@
+import { t, useLanguage } from "../lib/i18n";
 import { useLayoutEffect, useRef, useState } from "react";
 
 type Props<T extends string> = {
@@ -16,6 +17,7 @@ export default function Segmented<T extends string>({
   options,
   size = "md",
 }: Props<T>) {
+  const language = useLanguage();
   const root = useRef<HTMLDivElement>(null);
   const [thumb, setThumb] = useState<{ x: number; w: number } | null>(null);
 
@@ -31,14 +33,14 @@ export default function Segmented<T extends string>({
     const observer = new ResizeObserver(measure);
     observer.observe(root.current);
     return () => observer.disconnect();
-  }, [value, options.length]);
+  }, [value, options, language]);
 
   return (
     <div
       ref={root}
       className={`segmented ${size}`}
       role="group"
-      aria-label={label}
+      aria-label={t(label)}
     >
       {thumb && (
         <span
@@ -54,7 +56,7 @@ export default function Segmented<T extends string>({
           aria-pressed={option === value}
           onClick={() => onChange(option)}
         >
-          {text}
+          {typeof text === "string" ? t(text) : text}
         </button>
       ))}
     </div>

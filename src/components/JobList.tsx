@@ -1,3 +1,4 @@
+import { t, localeTag } from "../lib/i18n";
 import Segmented from "./Segmented";
 import {
   ArrowUpRight,
@@ -80,14 +81,14 @@ export default function JobList({
     );
   const filters = history
     ? ([
-        ["all", "Все"],
-        ["video", "Видео"],
-        ["audio", "Аудио"],
+        ["all", t("Все")],
+        ["video", t("Видео")],
+        ["audio", t("Аудио")],
       ] as const)
     : ([
-        ["all", "Все"],
-        ["active", "В процессе"],
-        ["completed", "Завершённые"],
+        ["all", t("Все")],
+        ["active", t("В процессе")],
+        ["completed", t("Завершённые")],
       ] as const);
 
   return (
@@ -95,13 +96,13 @@ export default function JobList({
       <div className="section-heading">
         <div>
           <h2>
-            {history ? "История файлов" : "Ваши загрузки"}
+            {history ? t("История файлов") : t("Ваши загрузки")}
             <span className="count-pill">{pool.length}</span>
           </h2>
           <p>
             {activeCount
-              ? `${activeCount} в работе · ${completedCount} завершено`
-              : "Всё важное в одном месте."}
+              ? t("{0} в работе · {1} завершено", { 0: activeCount, 1: completedCount })
+              : t("Всё важное в одном месте.")}
           </p>
         </div>
         {history ? (
@@ -111,17 +112,16 @@ export default function JobList({
             onClick={onClear}
           >
             <Bin2 size={15} />
-            Очистить
-          </button>
+            {t("Очистить")}</button>
         ) : (
           <button className="text-button" onClick={onShowHistory}>
-            Вся история <ArrowUpRight size={15} />
+            {t("Вся история")}{" "}<ArrowUpRight size={15} />
           </button>
         )}
       </div>
       <div className="queue-toolbar">
         <Segmented
-          label="Фильтр"
+          label={t("Фильтр")}
           size="sm"
           value={filter}
           onChange={setFilter}
@@ -130,8 +130,8 @@ export default function JobList({
         <label className="queue-search">
           <Search size={15} />
           <input
-            placeholder="Найти файл…"
-            aria-label="Поиск загрузок"
+            placeholder={t("Найти файл…")}
+            aria-label={t("Поиск загрузок")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -139,7 +139,7 @@ export default function JobList({
             <button
               type="button"
               className="icon-button"
-              aria-label="Сбросить поиск"
+              aria-label={t("Сбросить поиск")}
               onClick={() => setSearch("")}
             >
               <X size={13} />
@@ -155,25 +155,24 @@ export default function JobList({
             </span>
             <h3>
               {search
-                ? "Ничего не найдено"
+                ? t("Ничего не найдено")
                 : history
-                  ? "Здесь будет ваша история"
+                  ? t("Здесь будет ваша история")
                   : filter === "completed"
-                    ? "Пока нет завершённых загрузок"
+                    ? t("Пока нет завершённых загрузок")
                     : filter === "active"
-                      ? "Сейчас всё спокойно"
-                      : "Первая загрузка начинается со ссылки"}
+                      ? t("Сейчас всё спокойно")
+                      : t("Первая загрузка начинается со ссылки")}
             </h3>
             <p>
               {search
-                ? "Попробуйте другое название файла."
-                : "Сохраняйте видео и аудио. Остальное мы возьмём на себя."}
+                ? t("Попробуйте другое название файла.")
+                : t("Сохраняйте видео и аудио. Остальное мы возьмём на себя.")}
             </p>
             {!search && !history && filter === "all" && (
               <button className="button ghost small" onClick={onFocusUrl}>
                 <Plus size={14} />
-                Добавить ссылку
-              </button>
+                {t("Добавить ссылку")}</button>
             )}
           </div>
         ) : (
@@ -214,17 +213,17 @@ function JobRow({
   const meta = [
     formatName(request.format),
     request.quality === "best"
-      ? "Лучшее качество"
+      ? t("Лучшее качество")
       : request.kind === "video"
         ? `${request.quality}p`
-        : `${request.quality} кбит/с`,
-    job.speed !== null ? `${(job.speed / 1048576).toFixed(1)} МБ/с` : null,
+        : t("{0} кбит/с", { 0: request.quality }),
+    job.speed !== null ? t("{0} МБ/с", { 0: (job.speed / 1048576).toFixed(1) }) : null,
     request.clip
       ? `${timecode(request.clip.start)} → ${timecode(request.clip.end)}`
       : null,
-    job.eta !== null && job.eta > 0 ? `Осталось ${duration(job.eta)}` : null,
+    job.eta !== null && job.eta > 0 ? t("Осталось {0}", { 0: duration(job.eta) }) : null,
     job.status === "completed"
-      ? new Intl.DateTimeFormat("ru-RU", {
+      ? new Intl.DateTimeFormat(localeTag(), {
           day: "numeric",
           month: "short",
         }).format(job.created)
@@ -252,7 +251,7 @@ function JobRow({
               <LoaderCircle size={12} className="spin" />
             )}
             {job.status === "downloading" && <i className="pulse-dot" />}
-            {statusLabels[job.status]}
+            {t(statusLabels[job.status])}
           </span>
         </div>
         <div className="job-meta">
@@ -265,7 +264,7 @@ function JobRow({
             <div
               className={`progress-track ${job.status === "processing" ? "indeterminate" : ""}`}
               role="progressbar"
-              aria-label="Прогресс скачивания"
+              aria-label={t("Прогресс скачивания")}
               aria-valuenow={Math.round(job.progress)}
               aria-valuemin={0}
               aria-valuemax={100}
@@ -281,14 +280,14 @@ function JobRow({
             </span>
           </div>
         )}
-        {job.error && <p className="job-error">{job.error}</p>}
+        {job.error && <p className="job-error">{t(job.error)}</p>}
       </div>
       <div className="job-actions">
         {job.status === "completed" && (
           <button
             className="icon-button"
-            data-tooltip="Воспроизвести"
-            aria-label="Воспроизвести в приложении"
+            data-tooltip={t("Воспроизвести")}
+            aria-label={t("Воспроизвести в приложении")}
             onClick={() => onPlay(job)}
           >
             <Play size={17} />
@@ -297,8 +296,8 @@ function JobRow({
         {running ? (
           <button
             className="icon-button"
-            data-tooltip="Отменить"
-            aria-label={`Отменить: ${request.title}`}
+            data-tooltip={t("Отменить")}
+            aria-label={t("Отменить: {0}", { 0: request.title })}
             onClick={() => onAction("cancel_download", { id: job.id })}
           >
             <X size={17} />
@@ -306,8 +305,8 @@ function JobRow({
         ) : job.status === "completed" ? (
           <button
             className="icon-button"
-            data-tooltip="Показать в папке"
-            aria-label="Показать в папке"
+            data-tooltip={t("Показать в папке")}
+            aria-label={t("Показать в папке")}
             onClick={() => onAction("open_folder", { id: job.id })}
           >
             <FolderOpen size={17} />
@@ -315,8 +314,8 @@ function JobRow({
         ) : (
           <button
             className="icon-button"
-            data-tooltip="Повторить"
-            aria-label="Повторить загрузку"
+            data-tooltip={t("Повторить")}
+            aria-label={t("Повторить загрузку")}
             disabled={adding}
             onClick={() => onRetry(request)}
           >

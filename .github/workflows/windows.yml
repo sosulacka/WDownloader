@@ -1,0 +1,137 @@
+name: Windows build and release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  RUSTUP_TOOLCHAIN: stable
+
+jobs:
+  build:
+    name: Windows x64
+    runs-on: windows-2022
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --no-self-update
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@e9d7b9f1e587218970671bac74e5511ed9506e6a # v2
+        with:
+          workspaces: |
+            src-tauri -> target
+            installer -> target
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: Check release version
+        id: version
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          foreach ($config in @('src-tauri/tauri.conf.json', 'installer/tauri.conf.json')) {
+            if ((Get-Content $config -Raw | ConvertFrom-Json).version -ne $version) {
+              throw "Version in $config does not match package.json"
+            }
+          }
+          foreach ($manifest in @('src-tauri/Cargo.toml', 'installer/Cargo.toml')) {
+            $match = [regex]::Match((Get-Content $manifest -Raw), '(?m)^version\s*=\s*"([^"]+)"')
+            if (!$match.Success -or $match.Groups[1].Value -ne $version) {
+              throw "Version in $manifest does not match package.json"
+            }
+          }
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -cne "v$version") {
+            throw "Release tag must be v$version"
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Build application and lightweight installer
+        run: npm run setup:build -- --lite
+
+      - name: Package portable app and sources
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $portable = '.tools-cache/release-portable'
+          New-Item -ItemType Directory -Force -Path $portable | Out-Null
+          Copy-Item src-tauri/target/release/wdownloader.exe "$portable/Wdownloader.exe"
+          Copy-Item LICENSE, NOTICE -Destination $portable
+          Copy-Item licenses -Destination $portable -Recurse
+          Compress-Archive -Path "$portable/*" -DestinationPath "dist-installer/Wdownloader-$env:APP_VERSION-windows-x64-portable.zip"
+          git archive --format=zip --prefix="WDownloader-$env:APP_VERSION/" --output="dist-installer/Wdownloader-$env:APP_VERSION-source.zip" HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'Could not create source archive' }
+
+      - name: Write SHA256 checksums
+        run: |
+          $lines = Get-ChildItem dist-installer -File | Where-Object { $_.Extension -in @('.exe', '.zip') } | Sort-Object Name | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          }
+          $lines | Set-Content dist-installer/SHA256SUMS.txt -Encoding ascii
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: windows-x64
+          path: |
+            dist-installer/*-setup.exe
+            dist-installer/*-portable.zip
+            dist-installer/*-source.zip
+            dist-installer/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  release:
+    name: Publish tagged release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: windows-x64
+          path: dist-installer
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          args=(--verify-tag --generate-notes --title "Wdownloader $RELEASE_TAG")
+          if [[ "$RELEASE_TAG" == *-* ]]; then args+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" "${args[@]}" dist-installer/*

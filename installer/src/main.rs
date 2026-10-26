@@ -95,13 +95,17 @@ fn info() -> Info {
 }
 
 #[tauri::command]
-async fn pick_dir(app: tauri::AppHandle, current: String) -> Option<String> {
+async fn pick_dir(app: tauri::AppHandle, current: String, language: Option<String>) -> Option<String> {
     let start = PathBuf::from(&current);
     let parent = start.parent().filter(|p| p.is_dir()).unwrap_or(&start);
     let picked = app
         .dialog()
         .file()
-        .set_title("Папка установки")
+        .set_title(if language.as_deref() == Some("en") {
+            "Installation folder"
+        } else {
+            "Папка установки"
+        })
         .set_directory(parent)
         .blocking_pick_folder()?
         .into_path()
@@ -190,6 +194,8 @@ fn run_install(app: &tauri::AppHandle, dir: &Path, desktop: bool) -> Result<(), 
         version: VERSION,
         size_kb: (total / 1024).min(u32::MAX as u64) as u32,
     })?;
+    win::refresh_icon(&target);
+    win::refresh_icon(&dir.join("uninstall.exe"));
     emit(app, "done", "", 100.0);
     Ok(())
 }

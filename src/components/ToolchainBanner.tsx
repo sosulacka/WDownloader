@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
@@ -49,14 +50,14 @@ export default function ToolchainBanner({
       await invoke("open_tool_download", { tool });
     } catch {
       setLinkError(
-        "Откройте github.com и найдите страницу Releases соответствующего проекта ниже.",
+        t("Откройте github.com и найдите страницу Releases соответствующего проекта ниже."),
       );
     }
   }
   return (
     <section
       className={`toolchain-banner ${error && !pending ? "installation-failed" : ""}`}
-      aria-label="Установка компонентов"
+      aria-label={t("Установка компонентов")}
       aria-live="polite"
     >
       <div className="toolchain-top">
@@ -68,15 +69,15 @@ export default function ToolchainBanner({
         <div>
           <h2>
             {pending
-              ? "Готовим приложение к работе"
-              : `Не удалось установить ${error?.tool}`}
+              ? t("Готовим приложение к работе")
+              : t("Не удалось установить {0}", { 0: t(error?.tool || "компоненты") })}
           </h2>
           <p>
             {pending
               ? progress
-                ? `${labels[progress.stage] || "Подготовка"} ${progress.tool}`
-                : "Проверяем недостающие компоненты…"
-              : "Загрузка может быть прервана сетью или нехваткой места. Попробуйте ещё раз."}
+                ? `${t(labels[progress.stage] || "Подготовка")} ${t(progress.tool)}`
+                : t("Проверяем недостающие компоненты…")
+              : t("Загрузка может быть прервана сетью или нехваткой места. Попробуйте ещё раз.")}
           </p>
         </div>
         {!pending && (
@@ -85,8 +86,7 @@ export default function ToolchainBanner({
             onClick={onRetry}
           >
             <RotateCcw size={14} />
-            Повторить установку
-          </button>
+            {t("Повторить установку")}</button>
         )}
         {pending && progress?.progress != null && (
           <span className="install-percent">
@@ -104,39 +104,36 @@ export default function ToolchainBanner({
           </div>
           <span className="install-detail">
             {progress?.total
-              ? `${(progress.downloaded / 1048576).toFixed(1)} / ${(progress.total / 1048576).toFixed(1)} МБ`
-              : "Один раз. Компоненты сохранятся на этом устройстве."}
+              ? t("{0} / {1} МБ", { 0: (progress.downloaded / 1048576).toFixed(1), 1: (progress.total / 1048576).toFixed(1) })
+              : t("Один раз. Компоненты сохранятся на этом устройстве.")}
           </span>
         </>
       )}
       {error && !pending && (
         <>
-          <p className="installation-error-details">{error.message}</p>
+          <p className="installation-error-details">{t(error.message)}</p>
           <button
             className={`manual-toggle ${manual ? "active" : ""}`}
             onClick={() => setManual((v) => !v)}
             aria-expanded={manual}
           >
-            Как установить вручную
-            <ChevronDown size={14} />
+            {t("Как установить вручную")}<ChevronDown size={14} />
           </button>
           {manual && (
             <div className="manual-install">
               <p>
-                Скачайте Windows x64 версии с официальных страниц. Распакуйте
-                архивы и положите эти файлы в одну папку:
-              </p>
+                {t("Скачайте Windows x64 версии с официальных страниц. Распакуйте архивы и положите эти файлы в одну папку:")}</p>
               <div className="manual-tools">
                 {[
                   ["yt-dlp", "yt-dlp.exe", "yt-dlp/yt-dlp"],
                   [
                     "FFmpeg",
-                    "ffmpeg.exe + ffprobe.exe из папки bin",
+                    t("ffmpeg.exe + ffprobe.exe из папки bin"),
                     "yt-dlp/FFmpeg-Builds",
                   ],
                   [
                     "Deno",
-                    "deno.exe из deno-x86_64-pc-windows-msvc.zip",
+                    t("deno.exe из deno-x86_64-pc-windows-msvc.zip"),
                     "denoland/deno",
                   ],
                 ].map(([tool, files, project]) => (
@@ -150,17 +147,16 @@ export default function ToolchainBanner({
                       className="text-button"
                       onClick={() => void openPage(tool)}
                     >
-                      Скачать
-                      <ArrowUpRight size={14} />
+                      {t("Скачать")}<ArrowUpRight size={14} />
                     </button>
                   </div>
                 ))}
               </div>
               <div className="manual-folder">
-                <code>{error.folder}</code>
+                <code>{t(error.folder)}</code>
                 <button
                   className="icon-button"
-                  aria-label="Скопировать путь папки"
+                  aria-label={t("Скопировать путь папки")}
                   onClick={() => {
                     void navigator.clipboard
                       .writeText(error.folder)
@@ -170,7 +166,7 @@ export default function ToolchainBanner({
                       })
                       .catch(() =>
                         setLinkError(
-                          "Выделите путь папки и скопируйте его через Ctrl+C.",
+                          t("Выделите путь папки и скопируйте его через Ctrl+C."),
                         ),
                       );
                   }}
@@ -178,15 +174,14 @@ export default function ToolchainBanner({
                   {copied ? <Check size={16} /> : <ClipboardCopy size={16} />}
                 </button>
               </div>
-              {linkError && <p>{linkError}</p>}
-              <p>Создайте папку, если её нет. После копирования нажмите:</p>
+              {linkError && <p>{t(linkError)}</p>}
+              <p>{t("Создайте папку, если её нет. После копирования нажмите:")}</p>
               <button
                 className="button ghost small"
                 onClick={onCheck}
               >
                 <Check size={14} />
-                Проверить компоненты
-              </button>
+                {t("Проверить компоненты")}</button>
             </div>
           )}
         </>

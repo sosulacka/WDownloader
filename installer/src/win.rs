@@ -11,8 +11,8 @@ use windows::Win32::System::Registry::{
     HKEY_CURRENT_USER, KEY_WRITE, REG_DWORD, REG_OPTION_NON_VOLATILE, REG_SZ, RRF_RT_REG_SZ,
 };
 use windows::Win32::UI::Shell::{
-    IShellLinkW, SHGetKnownFolderPath, ShellLink, FOLDERID_Desktop, FOLDERID_Programs,
-    KF_FLAG_DEFAULT,
+    IShellLinkW, SHChangeNotify, SHGetKnownFolderPath, ShellLink, FOLDERID_Desktop, FOLDERID_Programs,
+    KF_FLAG_DEFAULT, SHCNE_UPDATEITEM, SHCNF_PATHW,
 };
 
 const UNINSTALL_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Wdownloader";
@@ -55,7 +55,16 @@ pub fn create_shortcut(link: &Path, target: &Path) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
         let file: IPersistFile = shell.cast().map_err(|e| e.to_string())?;
         file.Save(&HSTRING::from(link), true)
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.to_string())?;
+    }
+    refresh_icon(link);
+    Ok(())
+}
+
+pub fn refresh_icon(path: &Path) {
+    let path = HSTRING::from(path);
+    unsafe {
+        SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, Some(path.as_ptr().cast()), None);
     }
 }
 

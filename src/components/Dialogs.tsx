@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 import { useEffect, useState, type ReactNode } from "react";
 import MediaEditor from "./MediaEditor";
 import Logo from "./Logo";
@@ -55,14 +56,14 @@ export function PlaybackModal({
         <>
           <div className="modal-heading">
             <div>
-              <span className="eyebrow">Локальный файл</span>
+              <span className="eyebrow">{t("Локальный файл")}</span>
               <h2 id="playback-title">{job.request.title}</h2>
             </div>
             <button
               className="icon-button"
               autoFocus
               onClick={close}
-              aria-label="Закрыть плеер"
+              aria-label={t("Закрыть плеер")}
             >
               <X size={19} />
             </button>
@@ -119,7 +120,7 @@ export function CreditsModal({
             autoFocus
             className="icon-button modal-close"
             onClick={close}
-            aria-label="Закрыть"
+            aria-label={t("Закрыть")}
           >
             <X size={19} />
           </button>
@@ -135,8 +136,8 @@ export function CreditsModal({
           </h2>
           <dl className="credits-list">
             {credits.map(([term, value]) => (
-              <div key={term}>
-                <dt>{term}</dt>
+              <div key={t(term)}>
+                <dt>{t(term)}</dt>
                 <dd>{value}</dd>
               </div>
             ))}
@@ -160,13 +161,13 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
             autoFocus
             className="icon-button modal-close"
             onClick={close}
-            aria-label="Закрыть"
+            aria-label={t("Закрыть")}
           >
             <X size={19} />
           </button>
           <Logo size={40} />
-          <span className="eyebrow">Ничего лишнего</span>
-          <h2 id="help-title">От ссылки до файла.</h2>
+          <span className="eyebrow">{t("Ничего лишнего")}</span>
+          <h2 id="help-title">{t("От ссылки до файла.")}</h2>
           <ol className="help-steps">
             {steps.map(([title, text], i) => (
               <li
@@ -175,14 +176,14 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
               >
                 <span>{String(i + 1).padStart(2, "0")}</span>
                 <div>
-                  <h3>{title}</h3>
-                  <p>{text}</p>
+                  <h3>{t(title)}</h3>
+                  <p>{t(text)}</p>
                 </div>
               </li>
             ))}
           </ol>
           <button className="button primary" onClick={close}>
-            Всё понятно <ArrowRight size={16} />
+            {t("Всё понятно")}{" "}<ArrowRight size={16} />
           </button>
         </>
       )}
