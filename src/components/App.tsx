@@ -298,6 +298,16 @@ export default function App() {
       if (number === requestCounter.current) setLoading(false);
     }
   }
+  async function youtubeLogin() {
+    try {
+      if (await invoke<boolean>("youtube_login")) {
+        notify(t("Вход выполнен, повторяем запрос"));
+        void analyze();
+      }
+    } catch (e) {
+      notify(errorText(e), "error");
+    }
+  }
   async function paste() {
     try {
       changeUrl(await navigator.clipboard.readText());
@@ -531,6 +541,9 @@ export default function App() {
                 video={video}
                 error={error}
                 onDismissError={() => setError("")}
+                onRetry={() => void analyze()}
+                onOpenBrowser={() => void invoke("open_in_browser", { url }).catch((e) => notify(errorText(e), "error"))}
+                onLogin={() => void youtubeLogin()}
                 prefs={prefs}
                 setPrefs={setPrefs}
                 quality={quality}

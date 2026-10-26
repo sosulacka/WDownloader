@@ -14,6 +14,8 @@ use tokio::{
     sync::{watch, Semaphore},
 };
 mod installer;
+mod net;
+mod youtube_login;
 mod preview;
 mod youtube_session;
 mod ytdlp_update;
@@ -167,7 +169,17 @@ fn ytdlp(app: &tauri::AppHandle) -> Result<(Command, Option<youtube_session::Ses
         "20",
         "--retries",
         "3",
+        "--extractor-retries",
+        "2",
     ]);
+    // Свой прокси: DNS-over-HTTPS, обход сброса соединения и быстрый IPv4.
+    if let Some(proxy) = net::proxy() {
+        cmd.arg("--proxy").arg(proxy);
+    }
+    // Кэш yt-dlp (расшифровка подписи плеера) между запусками: следующие запросы быстрее.
+    if let Ok(dir) = app.path().app_cache_dir() {
+        cmd.arg("--cache-dir").arg(dir.join("yt-dlp"));
+    }
     if let Some(path) = locate(app, "ffmpeg") {
         cmd.arg("--ffmpeg-location").arg(path);
     }
@@ -212,18 +224,18 @@ fn error_message(stderr: &[u8]) -> String {
     if lower.contains("getaddrinfo failed") || lower.contains("failed to resolve")
         || lower.contains("name or service not known")
     {
-        return "Не удалось определить адрес сервера (DNS). Проверьте DNS и подключение Windows. DNS браузера может отличаться от системного.".into();
+        return "Не удалось найти адрес YouTube, даже через защищённый DNS. Проверьте подключение к интернету и нажмите Повторить.".into();
     }
     if lower.contains("sign in to confirm") || lower.contains("confirm you're not a bot")
         || lower.contains("confirm you’re not a bot")
     {
-        return "YouTube требует вход или проверку в браузере. Откройте ролик в браузере, затем подключите свою сессию в настройках: Сессия YouTube. Если сессия уже подключена, импортируйте свежий файл.".into();
+        return "YouTube просит подтвердить, что вы не бот. Нажмите Войти в YouTube: вход в приложении один раз, дальше ролики открываются без проверки.".into();
     }
     if lower.contains("connectionreseterror")
         || lower.contains("connection was reset")
         || lower.contains("winerror 10054")
     {
-        return "Соединение с YouTube сброшено. Если сайт работает через zapret / GoodbyeDPI, проверьте стратегию для HTTPS (TCP 443) или используйте VPN для всего компьютера.".into();
+        return "Соединение с YouTube сброшено сетью. Нажмите Повторить. Если не помогает, откройте ролик в браузере или включите VPN для всего компьютера.".into();
     }
     text.lines()
         .rev()
@@ -243,12 +255,16 @@ async fn inspect_video(app: tauri::AppHandle, url: String) -> Result<VideoInfo, 
         "--dump-single-json",
         "--skip-download",
         "--no-warnings",
+        // Для информации о ролике не нужны субтитры, комментарии и HLS-манифесты.
+        "--extractor-args",
+        "youtube:skip=hls,translated_subs",
+        "--no-check-formats",
         "--",
         &url,
     ]);
-    let output = tokio::time::timeout(std::time::Duration::from_secs(90), cmd.output())
+    let output = tokio::time::timeout(std::time::Duration::from_secs(60), cmd.output())
         .await
-        .map_err(|_| "YouTube не ответил за 90 секунд. Попробуйте ещё раз.".to_string())?
+        .map_err(|_| "YouTube не ответил за 60 секунд. Попробуйте ещё раз.".to_string())?
         .map_err(|e| format!("Не удалось запустить yt-dlp: {e}"))?;
     if !output.status.success() {
         return Err(error_message(&output.stderr));
@@ -685,6 +701,7 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            net::start();
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
             let history = dir.join("history.json");
@@ -718,6 +735,8 @@ pub fn run() {
             youtube_session::import_youtube_session,
             youtube_session::clear_youtube_session,
             youtube_session::open_youtube_session_help,
+            youtube_login::youtube_login,
+            youtube_login::open_in_browser,
             ytdlp_update::update_ytdlp,
             inspect_video,
             get_jobs,

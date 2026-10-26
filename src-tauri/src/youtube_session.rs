@@ -123,6 +123,18 @@ pub(super) fn import_youtube_session(app: tauri::AppHandle, path: String) -> Res
     Ok(true)
 }
 
+/// Сохраняет готовый Netscape cookies.txt (из окна входа) как сессию.
+pub(super) fn store(app: &tauri::AppHandle, cookies: &str) -> Result<(), String> {
+    let dir = folder(app)?;
+    fs::create_dir_all(&dir).map_err(|_| STORAGE_ERROR.to_string())?;
+    let temporary = SessionFile {
+        path: dir.join(format!("login-{}.cookies.txt", uuid::Uuid::new_v4())),
+    };
+    write_private(&temporary.path, cookies.as_bytes())?;
+    fs::rename(&temporary.path, dir.join("youtube-cookies.txt"))
+        .map_err(|_| STORAGE_ERROR.to_string())
+}
+
 #[tauri::command]
 pub(super) fn clear_youtube_session(app: tauri::AppHandle) -> Result<bool, String> {
     match fs::remove_file(folder(&app)?.join("youtube-cookies.txt")) {

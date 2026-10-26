@@ -48,6 +48,18 @@ export default function YouTubeSession({ desktop }: { desktop: boolean }) {
     }
   }
 
+  async function login() {
+    setWorking(true);
+    setError("");
+    try {
+      if (await invoke<boolean>("youtube_login")) setConnected(true);
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setWorking(false);
+    }
+  }
+
   async function disconnect() {
     setWorking(true);
     setError("");
@@ -77,7 +89,11 @@ export default function YouTubeSession({ desktop }: { desktop: boolean }) {
         {t("Импортируйте cookies.txt своей сессии в формате Netscape. Сохраняются только cookies youtube.com, локально на этом устройстве. Они используются yt-dlp при обращении к YouTube.")}
       </p>
       <div className="session-actions">
-        <button type="button" className="button secondary small" disabled={!desktop || busy} onClick={() => void importSession()}>
+        <button type="button" className="button primary small" disabled={!desktop || busy} onClick={() => void login()}>
+          <Link size={15} />
+          {t(connected ? "Войти заново" : "Войти в YouTube")}
+        </button>
+        <button type="button" className="button ghost small" disabled={!desktop || busy} onClick={() => void importSession()}>
           <Folder size={15} />
           {t(connected ? "Заменить файл сессии" : "Импортировать cookies.txt")}
         </button>

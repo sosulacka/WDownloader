@@ -404,5 +404,16 @@ export default {
   "Удалить настройки и историю": "Remove settings and history",
   "Также компоненты, скачанные приложением.": "Also removes components downloaded by the app.",
   "Удалить": "Uninstall",
-  "Ярлык в меню Пуск. Удалить можно в параметрах Windows.": "Find the shortcut in the Start menu. Uninstall from Windows Settings."
+  "Ярлык в меню Пуск. Удалить можно в параметрах Windows.": "Find the shortcut in the Start menu. Uninstall from Windows Settings.",
+  "Войти в YouTube": "Sign in to YouTube",
+  "Войти заново": "Sign in again",
+  "Открыть в браузере": "Open in browser",
+  "Вход выполнен, повторяем запрос": "Signed in, retrying",
+  "Вход в YouTube": "YouTube sign-in",
+  "Не удалось найти адрес YouTube, даже через защищённый DNS. Проверьте подключение к интернету и нажмите Повторить.": "Could not find the YouTube address, even with secure DNS. Check your internet connection and press Retry.",
+  "YouTube просит подтвердить, что вы не бот. Нажмите Войти в YouTube: вход в приложении один раз, дальше ролики открываются без проверки.": "YouTube wants to confirm you are not a bot. Press Sign in to YouTube: sign in once inside the app and videos open without the check.",
+  "Соединение с YouTube сброшено сетью. Нажмите Повторить. Если не помогает, откройте ролик в браузере или включите VPN для всего компьютера.": "The network reset the connection to YouTube. Press Retry. If that does not help, open the video in your browser or turn on a system-wide VPN.",
+  "YouTube не ответил за 60 секунд. Попробуйте ещё раз.": "YouTube did not respond in 60 seconds. Try again.",
+  "Вход не завершён за 10 минут. Попробуйте ещё раз.": "Sign-in was not finished in 10 minutes. Try again.",
+  "Не удалось открыть браузер.": "Could not open the browser."
 };

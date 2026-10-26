@@ -39,6 +39,9 @@ type Props = {
   video: VideoInfo | null;
   error: string;
   onDismissError: () => void;
+  onRetry: () => void;
+  onOpenBrowser: () => void;
+  onLogin: () => void;
   prefs: Prefs;
   setPrefs: Dispatch<SetStateAction<Prefs>>;
   quality: string;
@@ -119,7 +122,24 @@ export default function DownloadPanel(props: Props) {
       {props.error && (
         <div className="inline-error" role="alert">
           <CircleAlert size={17} />
-          <span>{t(props.error)}</span>
+          <div className="inline-error-body">
+            <span>{t(props.error)}</span>
+            {props.desktop && props.url.trim() && (
+              <div className="inline-error-actions">
+                {/не бот|вход|sign in|not a bot/i.test(props.error) && (
+                  <button type="button" className="button primary small" onClick={props.onLogin}>
+                    {t("Войти в YouTube")}
+                  </button>
+                )}
+                <button type="button" className="button ghost small" onClick={props.onRetry}>
+                  {t("Повторить")}
+                </button>
+                <button type="button" className="button ghost small" onClick={props.onOpenBrowser}>
+                  {t("Открыть в браузере")}
+                </button>
+              </div>
+            )}
+          </div>
           <button
             className="icon-button"
             aria-label={t("Закрыть ошибку")}

@@ -369,3 +369,19 @@
   letter-spacing: 0.5px;
   background: color-mix(in srgb, var(--ink-text) 14%, transparent);
 }
+
+.inline-error-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.inline-error-body > span {
+  overflow-wrap: anywhere;
+}
+.inline-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
