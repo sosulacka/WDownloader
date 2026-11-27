@@ -1,4 +1,5 @@
 use super::*;
+use sha2::{Digest, Sha256};
 use tokio::io::AsyncReadExt;
 
 #[derive(Serialize)]
@@ -35,6 +36,7 @@ async fn process(
     cmd: &mut Command,
     cancel: &mut watch::Receiver<bool>,
     stage: &str,
+    source_url: Option<&str>,
 ) -> Result<(), String> {
     if *cancel.borrow() {
         return Err("Подготовка отменена.".into());
@@ -49,8 +51,10 @@ async fn process(
     if let Some(pid) = pid {
         state.processes.lock().unwrap().insert(id.into(), pid);
     }
-    let mut stdout = BufReader::new(child.stdout.take().ok_or("Нет stdout")?).lines();
-    let mut stderr = BufReader::new(child.stderr.take().ok_or("Нет stderr")?).lines();
+    let mut stdout =
+        BufReader::new(child.stdout.take().ok_or_else(|| "Нет stdout".to_owned())?).lines();
+    let mut stderr =
+        BufReader::new(child.stderr.take().ok_or_else(|| "Нет stderr".to_owned())?).lines();
     let mut out_done = false;
     let mut err_done = false;
     let mut errors = std::collections::VecDeque::new();
@@ -86,18 +90,14 @@ async fn process(
     state.processes.lock().unwrap().remove(id);
     if !result.success() {
         return Err(error_message(
-            errors
-                .iter()
-                .cloned()
-                .collect::<Vec<_>>()
-                .join("\n")
-                .as_bytes(),
+            errors.make_contiguous().join("\n").as_bytes(),
+            source_url.unwrap_or_default(),
         ));
     }
     Ok(())
 }
 
-async fn media_duration(app: &tauri::AppHandle, path: &Path) -> Result<f64, String> {
+pub(super) async fn media_duration(app: &tauri::AppHandle, path: &Path) -> Result<f64, String> {
     let ffprobe = locate(app, "ffprobe").ok_or("Нужен ffprobe. Выполните npm run setup:tools.")?;
     let output = tokio::time::timeout(
         std::time::Duration::from_secs(20),
@@ -198,7 +198,7 @@ pub(super) async fn prepare_preview(
     let (key, source_url, source_file) = match (url, job_id) {
         (Some(url), None) => {
             let url = normalize_url(&url)?;
-            let key = url.rsplit('=').next().unwrap().to_string();
+            let key = format!("{:x}", Sha256::digest(url.as_bytes()));
             (key, Some(url), None)
         }
         (None, Some(job_id)) => {
@@ -239,13 +239,13 @@ pub(super) async fn prepare_preview(
         let path = dir.join(format!("{key}-{kind}.{extension}"));
         if !path.is_file() {
             let source = if let Some(url) = source_url {
-                let (mut cmd, _session) = ytdlp(&app)?;
+                let (mut cmd, _session) = ytdlp(&app, &url)?;
                 let raw_template = dir.join(format!("{key}-{kind}-source.%(ext)s"));
-                cmd.args(["--newline", "--progress", "--progress-delta", "0.5", "--progress-template", "download:WD_PREVIEW:%(progress.downloaded_bytes)s|%(progress.total_bytes,progress.total_bytes_estimate)s", "--no-simulate", "--no-warnings", "-o"]).arg(raw_template);
+                cmd.args(["--newline", "--progress", "--progress-delta", "0.5", "--progress-template", "download:WD_PREVIEW:%(progress.downloaded_bytes)s|%(progress.total_bytes,progress.total_bytes_estimate)s", "--no-simulate", "-o"]).arg(raw_template);
                 if kind == "audio" { cmd.args(["-f", "bestaudio[ext=m4a]/bestaudio/best", "-x", "--audio-format", "mp3", "--audio-quality", "5"]); }
-                else { cmd.args(["-f", "bestvideo[ext=mp4][vcodec^=avc1][height<=480]+bestaudio[ext=m4a]/best[ext=mp4][height<=480]/bestvideo[ext=mp4][height<=480]+bestaudio[ext=m4a]", "--merge-output-format", "mp4", "--remux-video", "mp4"]); }
-                cmd.args(["--", &url]);
-                process(&app, &state, &request_id, &mut cmd, &mut cancel, "downloading").await?;
+                else { cmd.args(["-f", "bestvideo[ext=mp4][vcodec^=avc1][height<=480]+bestaudio[ext=m4a]/best[ext=mp4][height<=480]/bestvideo[height<=480]+bestaudio/best[height<=480]/bestvideo+ba/best", "--merge-output-format", "mp4/mkv", "--recode-video", "mp4"]); }
+                cmd.args(["--match-filters", "!is_live", "--", &url]);
+                process(&app, &state, &request_id, &mut cmd, &mut cancel, "downloading", Some(&url)).await?;
                 dir.join(format!("{key}-{kind}-source.{extension}"))
             } else { source_file.unwrap() };
             let ffmpeg = locate(&app, "ffmpeg").ok_or("Нужен FFmpeg для предпросмотра")?;
@@ -255,7 +255,7 @@ pub(super) async fn prepare_preview(
             if kind == "audio" { cmd.args(["-vn", "-c:a", "libmp3lame", "-q:a", "5"]); }
             else { cmd.args(["-vf", "scale=-2:'min(480,ih)'", "-c:v", "libx264", "-preset", "veryfast", "-crf", "28", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart"]); }
             cmd.arg(&temporary);
-            process(&app, &state, &request_id, &mut cmd, &mut cancel, "processing").await?;
+            process(&app, &state, &request_id, &mut cmd, &mut cancel, "processing", None).await?;
             std::fs::rename(&temporary, &path).map_err(|e| e.to_string())?;
             if source.starts_with(&dir) { let _ = std::fs::remove_file(source); }
         }
@@ -263,7 +263,9 @@ pub(super) async fn prepare_preview(
         let peaks_path = dir.join(format!("{key}-{kind}-peaks.json"));
         let cached: Option<Vec<f32>> = std::fs::read(&peaks_path).ok().and_then(|bytes| serde_json::from_slice(&bytes).ok());
         let peaks = if let Some(peaks) = cached { peaks } else {
-            let peaks = waveform(&app, &state, &request_id, &path, duration, &mut cancel).await?;
+            let peaks = waveform(&app, &state, &request_id, &path, duration, &mut cancel).await;
+            if *cancel.borrow() { return Err("Подготовка отменена.".into()); }
+            let peaks = peaks.unwrap_or_default();
             if let Ok(json) = serde_json::to_vec(&peaks) { let _ = std::fs::write(peaks_path, json); }
             peaks
         };

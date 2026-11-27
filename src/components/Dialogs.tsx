@@ -1,11 +1,10 @@
 import { t } from "../lib/i18n";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import MediaEditor from "./MediaEditor";
 import Logo from "./Logo";
-import { ArrowRight, ArrowUpRight, X } from "./icons";
+import { X } from "./icons";
 import type { Job } from "../lib/types";
 
-/** Окно с анимацией закрытия: onClose вызывается после выхода. */
 function Modal({
   label,
   className,
@@ -19,12 +18,20 @@ function Modal({
 }) {
   const [closing, setClosing] = useState(false);
   const close = () => setClosing(true);
+  const dialog = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  useLayoutEffect(() => {
+    const opener = document.activeElement;
+    dialog.current?.querySelector<HTMLElement>("[data-initial-focus]")?.focus();
+    return () => { if (opener instanceof HTMLElement && opener.isConnected) opener.focus(); };
+  }, []);
   useEffect(() => {
     if (!closing) return;
-    const reduced = document.documentElement.dataset.motion === "reduced";
-    const timer = setTimeout(onClose, reduced ? 0 : 180);
+    const reduced = document.documentElement.dataset.motion === "reduced" || matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timer = setTimeout(() => onCloseRef.current(), reduced ? 0 : 180);
     return () => clearTimeout(timer);
-  }, [closing, onClose]);
+  }, [closing]);
   return (
     <div
       className={`modal-backdrop ${closing ? "closing" : ""}`}
@@ -32,10 +39,28 @@ function Modal({
     >
       <section
         className={`modal ${className}`}
+        ref={dialog}
         role="dialog"
         aria-modal="true"
         aria-labelledby={label}
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && !event.defaultPrevented) {
+            event.preventDefault();
+            close();
+          }
+          if (event.key !== "Tab") return;
+          const controls = [...event.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]',
+          )].filter((element) => element.getClientRects().length > 0);
+          const first = controls[0];
+          const last = controls.at(-1);
+          const edge = event.shiftKey ? first : last;
+          if (event.target === edge) {
+            event.preventDefault();
+            (event.shiftKey ? last : first)?.focus();
+          }
+        }}
       >
         {children(close)}
       </section>
@@ -56,12 +81,11 @@ export function PlaybackModal({
         <>
           <div className="modal-heading">
             <div>
-              <span className="eyebrow">{t("Локальный файл")}</span>
               <h2 id="playback-title">{job.request.title}</h2>
             </div>
             <button
               className="icon-button"
-              autoFocus
+              data-initial-focus
               onClick={close}
               aria-label={t("Закрыть плеер")}
             >
@@ -87,11 +111,11 @@ export function PlaybackModal({
 const steps = [
   [
     "Вставьте ссылку",
-    "Обычное видео, Shorts или запись завершённой трансляции YouTube.",
+    "Скопируйте ссылку на отдельное видео, запись эфира или трек.",
   ],
   [
-    "Выберите своё",
-    "Видео с аудио или только звук. Затем формат, качество и папку.",
+    "Выберите формат",
+    "Выберите видео или аудио и укажите качество файла.",
   ],
   [
     "Сохраните",
@@ -104,20 +128,17 @@ const credits = [
   ["Discord", "@syswow64deleted"],
 ];
 
-/** Пасхалка: открывается тройным кликом по логотипу. */
 export function CreditsModal({
   onClose,
-  onOpenSite,
 }: {
   onClose: () => void;
-  onOpenSite: () => void;
 }) {
   return (
     <Modal label="credits-title" className="credits-modal" onClose={onClose}>
       {(close) => (
         <>
           <button
-            autoFocus
+            data-initial-focus
             className="icon-button modal-close"
             onClick={close}
             aria-label={t("Закрыть")}
@@ -142,10 +163,6 @@ export function CreditsModal({
               </div>
             ))}
           </dl>
-          <button className="credits-link" onClick={onOpenSite}>
-            wteam.su
-            <ArrowUpRight size={17} />
-          </button>
         </>
       )}
     </Modal>
@@ -158,7 +175,7 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
       {(close) => (
         <>
           <button
-            autoFocus
+            data-initial-focus
             className="icon-button modal-close"
             onClick={close}
             aria-label={t("Закрыть")}
@@ -166,8 +183,7 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
             <X size={19} />
           </button>
           <Logo size={40} />
-          <span className="eyebrow">{t("Ничего лишнего")}</span>
-          <h2 id="help-title">{t("От ссылки до файла.")}</h2>
+          <h2 id="help-title">{t("Как скачать файл")}</h2>
           <ol className="help-steps">
             {steps.map(([title, text], i) => (
               <li
@@ -183,7 +199,7 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
             ))}
           </ol>
           <button className="button primary" onClick={close}>
-            {t("Всё понятно")}{" "}<ArrowRight size={16} />
+            {t("Всё понятно")}
           </button>
         </>
       )}

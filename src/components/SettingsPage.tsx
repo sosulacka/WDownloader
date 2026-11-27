@@ -1,7 +1,9 @@
 import { t } from "../lib/i18n";
+import { version } from "../../package.json";
 import type { Dispatch, SetStateAction } from "react";
 import Segmented from "./Segmented";
 import LanguageSwitch from "./LanguageSwitch";
+import LegalDocuments from "./LegalDocuments";
 import YouTubeSession from "./YouTubeSession";
 import Logo, { Wordmark } from "./Logo";
 import {
@@ -11,16 +13,13 @@ import {
   Download,
   Folder,
   Info,
-  Moon,
   Palette,
   RotateCcw,
   SlidersHorizontal,
   Sparkles,
-  Sun,
   Video,
-  CircleHalf,
 } from "./icons";
-import type { Appearance, IconStyle, Theme } from "../lib/appearance";
+import { interfaceScales, type Appearance, type IconStyle, type InterfaceScale, type Theme } from "../lib/appearance";
 import { cleanPath, type Dependencies, type Prefs, type YtdlpUpdate } from "../lib/types";
 
 type Props = {
@@ -42,10 +41,10 @@ type Props = {
   onUpdateYtdlp: () => void;
 };
 
-const themeOptions: readonly (readonly [Theme, string, typeof Sun])[] = [
-  ["dark", "Чёрная", Moon],
-  ["light", "Белая", Sun],
-  ["system", "Как в системе", CircleHalf],
+const themeOptions: readonly (readonly [Theme, string])[] = [
+  ["dark", "Тёмная"],
+  ["light", "Светлая"],
+  ["system", "Системная"],
 ];
 const iconOptions: readonly (readonly [IconStyle, string])[] = [
   ["round", "Скруглённые"],
@@ -128,30 +127,41 @@ export default function SettingsPage({
           </div>
           <LanguageSwitch />
         </div>
+        <span className="field-label">{t("Масштаб интерфейса")}</span>
+        <Segmented
+          label={t("Масштаб интерфейса")}
+          value={String(appearance.scale)}
+          options={interfaceScales.map((scale) => [String(scale), `${scale}%`] as const)}
+          onChange={(value) => onAppearance({ ...appearance, scale: Number(value) as InterfaceScale })}
+        />
         <span className="field-label">{t("Тема")}</span>
         <div className="theme-options" role="radiogroup" aria-label={t("Тема")}>
-          {themeOptions.map(([theme, label, Icon]) => (
-            <button
-              key={theme}
-              type="button"
-              role="radio"
-              aria-checked={appearance.theme === theme}
-              className={`theme-card ${theme}`}
-              onClick={(event) =>
-                onAppearance({ ...appearance, theme }, event.currentTarget)
-              }
-            >
-              <span className="theme-preview" aria-hidden="true">
-                <i />
-                <i />
-                <i />
+          {themeOptions.map(([theme, label]) => (
+            <label key={theme} className="theme-card">
+              <input
+                className="theme-input"
+                type="radio"
+                name="app-theme"
+                value={theme}
+                checked={appearance.theme === theme}
+                onChange={(event) =>
+                  onAppearance({ ...appearance, theme }, event.currentTarget.closest("label"))
+                }
+              />
+              <span className="theme-previews" aria-hidden="true">
+                {(theme === "system" ? ["dark", "light"] : [theme]).map((mode) => (
+                  <span className="theme-mini" key={mode} data-theme={mode}>
+                    <i className="theme-mini-sidebar" />
+                    <i className="theme-mini-field" />
+                    <i className="theme-mini-button" />
+                  </span>
+                ))}
               </span>
               <span className="theme-card-label">
-                <Icon size={15} />
                 {t(label)}
-                <span className="radio" />
+                <i className="theme-card-dot" aria-hidden="true" />
               </span>
-            </button>
+            </label>
           ))}
         </div>
         <span className="field-label">{t("Иконки")}</span>
@@ -302,11 +312,15 @@ export default function SettingsPage({
         {ytdlpUpdateError && <div className="inline-error" role="alert"><CircleAlert size={17} /><span>{t(ytdlpUpdateError)}</span></div>}
       </section>
 
+      <details className="card settings-card wide legal-settings">
+        <summary>{t("Условия и конфиденциальность")}</summary>
+        <LegalDocuments />
+      </details>
       <section className="card settings-card wide about-card">
         <Logo size={44} />
         <div>
           <Wordmark />
-          <p>{t("Версия 0.1.1 · Rust + Tauri v2 + Astro · Иконки Keyline Icons")}</p>
+          <p>{t("Версия {0} · Rust + Tauri v2 + Astro · Иконки Keyline Icons", { 0: version })}</p>
           <small>
             {t("Обработка идёт на вашем устройстве. FLAC и WAV сохраняют результат декодирования и не восстанавливают качество, потерянное при сжатии на YouTube.")}</small>
         </div>

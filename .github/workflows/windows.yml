@@ -74,11 +74,8 @@ jobs:
           }
           "version=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Prepare offline components
-        run: npm run setup:tools
-
-      - name: Build application and both installers
-        run: npm run setup:build -- --offline
+      - name: Build application and installer
+        run: npm run setup:build
 
       - name: Package portable app and sources
         env:
@@ -94,10 +91,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Could not create source archive' }
 
       - name: Write SHA256 checksums
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          $lines = Get-ChildItem dist-installer -File | Where-Object { $_.Extension -in @('.exe', '.zip') } | Sort-Object Name | ForEach-Object {
-            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-            "$hash  $($_.Name)"
+          $lines = foreach ($suffix in @('setup.exe', 'source.zip', 'windows-x64-portable.zip')) {
+            $name = "Wdownloader-$env:APP_VERSION-$suffix"
+            $hash = (Get-FileHash -LiteralPath "dist-installer/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $name"
           }
           $lines | Set-Content dist-installer/SHA256SUMS.txt -Encoding ascii
 
@@ -106,9 +106,9 @@ jobs:
         with:
           name: windows-x64
           path: |
-            dist-installer/*-setup.exe
-            dist-installer/*-portable.zip
-            dist-installer/*-source.zip
+            dist-installer/Wdownloader-${{ steps.version.outputs.version }}-setup.exe
+            dist-installer/Wdownloader-${{ steps.version.outputs.version }}-windows-x64-portable.zip
+            dist-installer/Wdownloader-${{ steps.version.outputs.version }}-source.zip
             dist-installer/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 14

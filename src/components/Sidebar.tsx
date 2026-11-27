@@ -1,8 +1,7 @@
 import { t } from "../lib/i18n";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Logo, { Wordmark } from "./Logo";
 import {
-  ArrowUpRight,
   Clock,
   Download,
   FolderOpen,
@@ -22,9 +21,9 @@ type Props = {
 };
 
 const items = [
-  { page: "downloads", label: "Загрузки", Icon: Download, key: "1" },
-  { page: "history", label: "История", Icon: Clock, key: "2" },
-  { page: "settings", label: "Настройки", Icon: Settings, key: "3" },
+  { page: "downloads", label: "Загрузки", Icon: Download },
+  { page: "history", label: "История", Icon: Clock },
+  { page: "settings", label: "Настройки", Icon: Settings },
 ] as const;
 
 export default function Sidebar({
@@ -36,13 +35,7 @@ export default function Sidebar({
   onHelp,
   onSecret,
 }: Props) {
-  const nav = useRef<HTMLElement>(null);
-  const [indicator, setIndicator] = useState<{ y: number; h: number } | null>(
-    null,
-  );
-
-  // Три клика подряд (каждый не позже 600 мс после предыдущего) открывают пасхалку.
-  // Счётчик в ref, чтобы быстрые клики не читали устаревшее состояние.
+  // Три быстрых клика открывают пасхалку.
   const [clicks, setClicks] = useState(0);
   const tapCount = useRef(0);
   const tapTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -63,14 +56,6 @@ export default function Sidebar({
     }, 600);
   }
 
-  useLayoutEffect(() => {
-    const selected = nav.current?.querySelector<HTMLElement>(
-      '[aria-current="page"]',
-    );
-    if (selected)
-      setIndicator({ y: selected.offsetTop, h: selected.offsetHeight });
-  }, [page]);
-
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -80,29 +65,20 @@ export default function Sidebar({
           aria-label="Wdownloader"
           onClick={tap}
         >
-          <Logo size={30} busy={activeCount > 0} />
+          <Logo size={32} />
         </button>
         <Wordmark />
       </div>
-      <nav ref={nav} className="nav" aria-label={t("Основная навигация")}>
-        {indicator && (
-          <span
-            className="nav-indicator"
-            aria-hidden="true"
-            style={{
-              transform: `translateY(${indicator.y}px)`,
-              height: indicator.h,
-            }}
-          />
-        )}
+      <nav className="nav" aria-label={t("Основная навигация")}>
         {items.map(({ page: target, label, Icon }) => (
           <button
             key={target}
             className="nav-item"
+            aria-label={t(label)}
             aria-current={page === target ? "page" : undefined}
             onClick={() => onNavigate(target)}
           >
-            <Icon size={18} />
+            <Icon size={20} />
             <span>{t(label)}</span>
             {target === "downloads" && activeCount > 0 && (
               <span className="nav-badge live">{activeCount}</span>
@@ -114,15 +90,13 @@ export default function Sidebar({
         ))}
       </nav>
       <div className="sidebar-bottom">
-        <button className="side-link" onClick={onOpenFolder}>
-          <FolderOpen size={17} />
+        <button className="side-link" aria-label={t("Папка загрузок")} onClick={onOpenFolder}>
+          <FolderOpen size={18} />
           <span>{t("Папка загрузок")}</span>
-          <ArrowUpRight size={14} />
         </button>
-        <button className="side-link" onClick={onHelp}>
-          <Info size={17} />
+        <button className="side-link" aria-label={t("Как это работает")} onClick={onHelp}>
+          <Info size={18} />
           <span>{t("Как это работает")}</span>
-          <ArrowUpRight size={14} />
         </button>
       </div>
     </aside>

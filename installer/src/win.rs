@@ -105,7 +105,7 @@ pub fn register(entry: &UninstallEntry) -> Result<(), String> {
             ("DisplayName", "Wdownloader".to_string()),
             ("DisplayVersion", entry.version.to_string()),
             ("Publisher", "WTEAM".to_string()),
-            ("URLInfoAbout", "https://wteam.su".to_string()),
+            ("URLInfoAbout", "https://github.com/sosulacka/WDownloader".to_string()),
             ("DisplayIcon", exe),
             ("InstallLocation", dir),
             ("UninstallString", format!("\"{uninstall}\" --uninstall")),

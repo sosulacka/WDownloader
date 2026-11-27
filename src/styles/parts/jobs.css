@@ -1,202 +1,151 @@
-/* ---------- Очередь ---------- */
 .section-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.section-heading h2 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
-}
-.section-heading p {
-  margin-top: 4px;
-  font-size: 13px;
-  color: var(--text-3);
-}
-.count-pill {
-  min-width: 26px;
-  height: 22px;
-  padding: 0 7px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 20px;
-  background: var(--surface-3);
-  font-size: 12px;
-  font-weight: 650;
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-}
-.queue-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
 }
-.queue-search {
-  width: 240px;
-  height: 36px;
-  padding: 0 4px 0 12px;
+.section-heading h2 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+.section-heading p {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.queue-toolbar {
   display: flex;
   align-items: center;
-  gap: 9px;
-  border-radius: 10px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+.queue-search {
+  width: min(100%, 258px);
+  min-height: 36px;
+  padding: 0 5px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-2);
   background: var(--surface);
   color: var(--text-3);
-  transition:
-    border-color 0.2s,
-    width 0.35s var(--ease-out),
-    box-shadow 0.25s;
 }
 .queue-search:focus-within {
-  width: 300px;
-  border-color: var(--text);
-  box-shadow: 0 0 0 4px var(--halo);
   color: var(--text);
+  border-color: var(--accent);
 }
 .queue-search input {
   flex: 1;
   min-width: 0;
+  min-height: 34px;
   border: 0;
   background: none;
   font-size: 13px;
 }
-.queue-search input::placeholder {
-  color: var(--text-3);
-}
+.queue-search input::placeholder { color: var(--text-3); }
 .queue-search .icon-button {
   width: 26px;
   height: 26px;
   min-width: 26px;
 }
 .job-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.job-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 12px 14px 14px;
+  container: queue / inline-size;
+  border: 1px solid var(--line-2);
   border-radius: var(--radius-md);
   background: var(--surface);
-  border: 1px solid var(--line);
-  animation: rise 0.45s var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 35ms);
-  transition:
-    border-color 0.2s,
-    background 0.2s;
 }
-.job-row:hover {
-  border-color: var(--line-2);
+.job-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 104px 106px;
+  align-items: center;
+  gap: 5px 12px;
+  padding: 9px 12px;
 }
-.job-row.failed,
-.job-row.cancelled {
-  background: var(--bg-raised);
-}
+.job-row + .job-row { border-top: 1px solid var(--line-2); }
 .job-icon {
-  width: 42px;
-  height: 42px;
-  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
-  border-radius: 11px;
-  background: var(--surface-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
   color: var(--text-2);
 }
-.job-row.completed .job-icon {
-  background: var(--ink);
-  color: var(--ink-text);
-}
-.job-content {
-  flex: 1;
-  min-width: 0;
-}
-.job-topline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.job-topline h3 {
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 600;
+.job-content { min-width: 0; }
+.job-content h3 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.job-status {
-  flex-shrink: 0;
-  height: 22px;
-  padding: 0 9px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border-radius: 20px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 650;
-  color: var(--text-2);
-  border: 1px solid var(--line-2);
-}
-.job-status.completed {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--ink-text);
-}
-.job-status.downloading {
-  color: var(--text);
-  border-color: var(--line-3);
-}
-.job-status.failed {
-  color: var(--text);
-  border-style: dashed;
-  border-color: var(--line-3);
-}
-.pulse-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: pulse 1.2s ease-in-out infinite;
 }
 .job-meta {
-  margin-top: 4px;
+  margin-top: 2px;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 0;
+  gap: 1px 0;
   font-size: 12px;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
 .job-meta > span + span::before {
-  content: "";
-  display: inline-block;
-  width: 3px;
-  height: 3px;
-  margin: 0 8px;
-  vertical-align: middle;
-  border-radius: 50%;
-  background: var(--line-3);
+  content: "·";
+  margin: 0 6px;
 }
+.job-status {
+  justify-self: start;
+  padding: 3px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-2);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 18px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.job-status.completed {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  color: var(--success);
+}
+.job-status.downloading,
+.job-status.processing {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.job-status.failed {
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  color: var(--error);
+}
+.job-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.job-actions .icon-button {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+}
+.job-action.button {
+  height: 32px;
+  padding: 0 9px;
+  color: var(--text);
+  border: 1px solid var(--line-2);
+}
+.job-action:not(:disabled):hover { background: var(--surface-2); }
 .progress-row {
-  margin-top: 10px;
+  grid-column: 2 / -1;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .progress-row > span {
-  width: 36px;
+  width: 32px;
   text-align: right;
   font-size: 12px;
   font-weight: 650;
@@ -213,68 +162,44 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--text);
+  background: var(--accent);
   transform-origin: left;
-  transition: transform 0.45s var(--ease-out);
-  position: relative;
-  overflow: hidden;
+  transition: transform 0.2s var(--ease-out);
 }
-.progress-track > i::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, var(--halo), transparent);
-  animation: indeterminate 1.4s linear infinite;
-}
-.progress-track.indeterminate > i {
-  transform: none !important;
-  animation: indeterminate 1.3s var(--ease) infinite;
-}
+.progress-track.indeterminate > i { opacity: 0.45; }
 .job-error {
-  margin-top: 8px;
+  grid-column: 2 / -1;
   font-size: 12px;
-  line-height: 1.6;
-  color: var(--text-2);
+  line-height: 1.55;
+  color: var(--error);
   overflow-wrap: anywhere;
 }
-.job-actions {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
 .empty-state {
-  padding: 48px 24px;
-  display: flex;
-  flex-direction: column;
+  min-height: 90px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
   align-items: center;
-  text-align: center;
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--line-2);
-  animation: fade 0.4s;
+  gap: 3px 12px;
 }
 .empty-icon {
-  width: 54px;
-  height: 54px;
+  grid-row: 1 / span 2;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
-  margin-bottom: 16px;
-  border-radius: 15px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  color: var(--text-2);
-  animation: float 3.2s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
-@keyframes float {
-  50% {
-    transform: translateY(-4px);
-  }
+.empty-state h3 { font-size: 14px; font-weight: 650; }
+.empty-state p { grid-column: 2; font-size: 13px; color: var(--text-3); }
+.empty-state > .button { grid-column: 2; justify-self: start; }
+@container queue (max-width: 470px) {
+  .job-row { grid-template-columns: 36px minmax(0, 1fr) auto; }
+  .job-content { grid-column: 2 / -1; }
+  .job-status { grid-column: 2; }
 }
-.empty-state h3 {
-  font-size: 15px;
-  font-weight: 650;
-}
-.empty-state p {
-  margin: 6px 0 18px;
-  font-size: 13px;
-  color: var(--text-3);
+@container workspace (max-width: 590px) {
+  .queue-search { width: 100%; }
 }

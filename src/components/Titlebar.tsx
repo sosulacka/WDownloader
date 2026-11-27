@@ -2,10 +2,9 @@ import { t } from "../lib/i18n";
 import { useEffect, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import Logo from "./Logo";
 import { Minus, X } from "./icons";
 
-export default function Titlebar({ busy = false }: { busy?: boolean }) {
+export default function Titlebar() {
   const [maximized, setMaximized] = useState(false);
   useEffect(() => {
     if (!isTauri()) return;
@@ -33,12 +32,7 @@ export default function Titlebar({ busy = false }: { busy?: boolean }) {
 
   return (
     <div className="window-titlebar">
-      <div className="window-drag-region" data-tauri-drag-region>
-        <span className="window-logo" data-tauri-drag-region>
-          <Logo size={16} busy={busy} />
-        </span>
-        <span data-tauri-drag-region>DOWNLOADER</span>
-      </div>
+      <div className="window-drag-region" data-tauri-drag-region />
       <div className="window-controls">
         <button
           onClick={() => perform("minimize")}
@@ -52,7 +46,14 @@ export default function Titlebar({ busy = false }: { busy?: boolean }) {
           aria-label={maximized ? t("Восстановить окно") : t("Развернуть окно")}
           title={maximized ? t("Восстановить") : t("Развернуть")}
         >
-          <span className={`maximize-icon ${maximized ? "restored" : ""}`} />
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+            {maximized ? (
+              <>
+                <path d="M6 5V4a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-1" />
+                <rect x="3" y="6" width="7" height="7" rx="1" />
+              </>
+            ) : <rect x="3.5" y="3.5" width="9" height="9" rx="1.25" />}
+          </svg>
         </button>
         <button
           className="window-close"

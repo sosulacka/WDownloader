@@ -1,12 +1,14 @@
 import { t, initializeLanguage, useLanguage } from "../lib/i18n";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
 import Titlebar from "./Titlebar";
 import Sidebar from "./Sidebar";
 import LanguageSwitch from "./LanguageSwitch";
+import LegalDocuments from "./LegalDocuments";
 import DownloadPanel from "./DownloadPanel";
 import JobList from "./JobList";
 import SettingsPage from "./SettingsPage";
@@ -38,6 +40,8 @@ import {
   errorText,
   type Dependencies,
   type Job,
+  type ExtraFormat,
+  type SponsorSegment,
   type Page,
   type Prefs,
   type Request,
@@ -50,20 +54,53 @@ type Toast = { id: number; text: string; tone: "info" | "error" };
 
 const pages: Record<Page, { title: string; text: string }> = {
   downloads: {
-    title: "Сохраните нужное.",
-    text: "Видео или только звук. В нужном качестве и формате.",
+    title: "Скачать медиа",
+    text: "",
   },
   history: {
-    title: "История загрузок.",
+    title: "История загрузок",
     text: "Загруженные файлы, отмены и повторные попытки.",
   },
   settings: {
-    title: "Всё под контролем.",
+    title: "Настройки",
     text: "Папка, внешний вид и компоненты приложения.",
   },
 };
 
+const legalKey = "wd-legal-accepted";
+const legalRevision = "2026-11-28";
+
 export default function App() {
+  const [accepted, setAccepted] = useState<boolean | null>(null);
+  useEffect(() => {
+    initializeLanguage();
+    try {
+      setAccepted(localStorage.getItem(legalKey) === legalRevision);
+    } catch {
+      setAccepted(false);
+    }
+  }, []);
+  const accept = useCallback(() => {
+    try {
+      localStorage.setItem(legalKey, legalRevision);
+    } catch {
+      /* При следующем запуске спросим снова. */
+    }
+    setAccepted(true);
+  }, []);
+
+  if (accepted) return <Workspace />;
+  return (
+    <div className="app-shell legal-shell">
+      <Titlebar />
+      <main className="legal-start">
+        {accepted === false && <LegalDocuments onAccept={accept} />}
+      </main>
+    </div>
+  );
+}
+
+function Workspace() {
   useLanguage();
   const [page, setPage] = useState<Page>("downloads");
   const [prefs, setPrefs] = useState<Prefs>(defaultPrefs);
@@ -81,6 +118,10 @@ export default function App() {
   const [quality, setQuality] = useState("best");
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [savingExtra, setSavingExtra] = useState(false);
+  const [sponsorBlock, setSponsorBlock] = useState(false);
+  const [sponsorSegments, setSponsorSegments] = useState<SponsorSegment[]>([]);
+  const [sponsorStatus, setSponsorStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [error, setError] = useState("");
   const [toast, setToast] = useState<Toast | null>(null);
   const [toastLeaving, setToastLeaving] = useState(false);
@@ -101,11 +142,14 @@ export default function App() {
   const installerBusy = useRef(false);
   const updaterBusy = useRef(false);
   const toastCounter = useRef(0);
+  const downloadBusy = useRef(false);
+  const extraBusy = useRef(false);
   const active = jobs.filter((j) => activeStates.includes(j.status));
   const finished = jobs.filter((j) => !activeStates.includes(j.status));
   const completed = jobs.filter((j) => j.status === "completed");
   const ready =
     !!deps?.ytDlp && !!deps?.ffmpeg && !!deps?.ffprobe && !!deps?.deno;
+  const kind = video && !video.hasVideo ? "audio" : video && !video.hasAudio ? "video" : prefs.kind;
   const dark = resolveTheme(appearance.theme, prefersDark) === "dark";
 
   function notify(text: string, tone: Toast["tone"] = "info") {
@@ -114,7 +158,6 @@ export default function App() {
   }
 
   useEffect(() => {
-    initializeLanguage();
     try {
       const saved = JSON.parse(
         localStorage.getItem("wd-preferences") || "null",
@@ -213,6 +256,21 @@ export default function App() {
     }
   }, [appearance, prefersDark, loaded]);
   useEffect(() => {
+    if (!loaded) return;
+    const root = document.documentElement;
+    const zoom = appearance.scale / 100;
+    if (!desktop) {
+      root.style.setProperty("--browser-zoom", String(zoom));
+      return;
+    }
+    let current = true;
+    void getCurrentWebview().setZoom(zoom).then(
+      () => { if (current) root.style.removeProperty("--browser-zoom"); },
+      () => { if (current) root.style.setProperty("--browser-zoom", String(zoom)); },
+    );
+    return () => { current = false; };
+  }, [appearance.scale, desktop, loaded]);
+  useEffect(() => {
     if (!toast) return;
     const leave = setTimeout(() => setToastLeaving(true), 4000);
     const clear = setTimeout(() => setToast(null), 4250);
@@ -223,22 +281,35 @@ export default function App() {
   }, [toast]);
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      if (document.querySelector('[aria-modal="true"]')) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "l") {
         e.preventDefault();
         navigate("downloads");
         setTimeout(() => urlRef.current?.focus(), 0);
-      }
-      if (e.key === "Escape") {
-        setShowHelp(false);
-        setShowCredits(false);
-        setPlaybackJob(null);
       }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  /** Меняет вид; если тема поменялась, новая расходится кругом от кнопки. */
+  useEffect(() => {
+    if (!video || !sponsorBlock) {
+      setSponsorSegments([]);
+      setSponsorStatus("idle");
+      return;
+    }
+    let current = true;
+    setSponsorStatus("loading");
+    void invoke<SponsorSegment[]>("sponsor_segments", { url: video.url }).then((segments) => {
+      if (!current) return;
+      setSponsorSegments(segments);
+      setSponsorStatus("ready");
+    }).catch(() => {
+      if (current) setSponsorStatus("error");
+    });
+    return () => { current = false; };
+  }, [sponsorBlock, video]);
+
   function changeAppearance(next: Appearance, from?: HTMLElement | null) {
     const before = resolveTheme(appearance.theme, prefersDark);
     const after = resolveTheme(next.theme, prefersDark);
@@ -267,6 +338,7 @@ export default function App() {
     setUrl(value);
     setVideo(null);
     setClip(null);
+    setSponsorBlock(false);
     setLoading(false);
     setError("");
   }
@@ -286,6 +358,8 @@ export default function App() {
     setLoading(true);
     setError("");
     setVideo(null);
+    setClip(null);
+    setSponsorBlock(false);
     try {
       const result = await invoke<VideoInfo>("inspect_video", { url });
       if (number === requestCounter.current) {
@@ -335,7 +409,7 @@ export default function App() {
     }
   }
   async function addDownload(request?: Request) {
-    if (adding || (!video && !request)) return;
+    if (downloadBusy.current || (!video && !request)) return;
     if (!ready) {
       setError(t("Проверьте yt-dlp, FFmpeg и Deno в настройках приложения."));
       if (page !== "downloads")
@@ -343,7 +417,8 @@ export default function App() {
       return;
     }
     const format =
-      prefs.kind === "video" ? prefs.videoFormat : prefs.audioFormat;
+      kind === "video" ? prefs.videoFormat : prefs.audioFormat;
+    downloadBusy.current = true;
     setAdding(true);
     setError("");
     try {
@@ -351,12 +426,16 @@ export default function App() {
         request: request || {
           url: video!.url,
           title: video!.title,
-          kind: prefs.kind,
+          kind,
           format,
-          quality: prefs.kind === "video" ? quality : prefs.audioQuality,
+          quality: kind === "video" ? quality : prefs.audioQuality,
           folder: prefs.folder,
           metadata: prefs.metadata,
           clip,
+          sponsorBlock: sponsorBlock && video!.platform === "YouTube",
+          normalizeAudio: kind === "audio" && prefs.normalizeAudio,
+          removeSilence: kind === "audio" && prefs.removeSilence,
+          enhanceVoice: kind === "audio" && prefs.enhanceVoice,
         },
       });
       setJobs((previous) =>
@@ -367,7 +446,23 @@ export default function App() {
       setError(errorText(e));
       if (page !== "downloads") notify(errorText(e), "error");
     } finally {
+      downloadBusy.current = false;
       setAdding(false);
+    }
+  }
+  async function saveExtra(format: ExtraFormat, language?: string) {
+    if (!video || extraBusy.current) return;
+    extraBusy.current = true;
+    setSavingExtra(true);
+    try {
+      const path = await invoke<string>("save_extra", { url: video.url, folder: prefs.folder, format, language });
+      const filename = path.split(/[\\/]/).at(-1) || path;
+      notify(t("Файл сохранён: {0}", { 0: filename }));
+    } catch (e) {
+      notify(errorText(e), "error");
+    } finally {
+      extraBusy.current = false;
+      setSavingExtra(false);
     }
   }
   async function action(command: string, args?: Record<string, unknown>) {
@@ -456,20 +551,19 @@ export default function App() {
   }
 
   const heading = pages[page];
-  const [titleStart, ...titleRest] = t(heading.title).split(" ");
 
   return (
     <IconContext.Provider
       value={{ style: appearance.iconStyle, stroke: appearance.stroke }}
     >
       <div className="app-shell">
-        <Titlebar busy={active.length > 0} />
+        <Titlebar />
         <Sidebar
           page={page}
           onNavigate={navigate}
           activeCount={active.length}
           historyCount={finished.length}
-          onOpenFolder={() => void action("open_folder", { id: null })}
+          onOpenFolder={() => void action("open_folder", { id: null, folder: prefs.folder })}
           onHelp={() => setShowHelp(true)}
           onSecret={() => setShowCredits(true)}
         />
@@ -483,9 +577,8 @@ export default function App() {
                 <span>{t("ссылка")}</span>
               </span>
               <button
-                className="icon-button theme-flip"
+                className="button ghost theme-flip"
                 aria-label={dark ? t("Светлая тема") : t("Тёмная тема")}
-                data-tooltip={dark ? t("Светлая тема") : t("Тёмная тема")}
                 onClick={(event) =>
                   changeAppearance(
                     { ...appearance, theme: dark ? "light" : "dark" },
@@ -494,31 +587,16 @@ export default function App() {
                 }
               >
                 <span key={dark ? "dark" : "light"} className="theme-flip-icon">
-                  {dark ? <Sun size={17} /> : <Moon size={17} />}
+                  {dark ? <Sun size={18} /> : <Moon size={18} />}
                 </span>
+                {dark ? t("Светлая тема") : t("Тёмная тема")}
               </button>
             </div>
           </header>
-          <main key={page} className="page">
+          <main key={page} className={`page page-${page}`}>
             <div className="page-heading">
-              <div>
-                <h1>
-                  {titleStart} <span>{titleRest.join(" ")}</span>
-                </h1>
-                <p>{t(heading.text)}</p>
-              </div>
-              {page !== "settings" && (
-                <dl className="heading-stats">
-                  <div>
-                    <dt>{t("В работе")}</dt>
-                    <dd>{active.length}</dd>
-                  </div>
-                  <div>
-                    <dt>{t("Готово")}</dt>
-                    <dd>{completed.length}</dd>
-                  </div>
-                </dl>
-              )}
+              <h1>{t(heading.title)}</h1>
+              {heading.text && <p>{t(heading.text)}</p>}
             </div>
 
             <ToolchainBanner
@@ -546,6 +624,7 @@ export default function App() {
                 onLogin={() => void youtubeLogin()}
                 prefs={prefs}
                 setPrefs={setPrefs}
+                kind={kind}
                 quality={quality}
                 setQuality={setQuality}
                 clip={clip}
@@ -554,6 +633,12 @@ export default function App() {
                 adding={adding}
                 onChooseFolder={() => void chooseFolder()}
                 onDownload={() => void addDownload()}
+                onSaveExtra={(format, language) => void saveExtra(format, language)}
+                savingExtra={savingExtra}
+                sponsorBlock={sponsorBlock}
+                sponsorSegments={sponsorSegments}
+                sponsorStatus={sponsorStatus}
+                onSponsorBlock={setSponsorBlock}
               />
             )}
 
@@ -629,12 +714,7 @@ export default function App() {
           />
         )}
         {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
-        {showCredits && (
-          <CreditsModal
-            onClose={() => setShowCredits(false)}
-            onOpenSite={() => void action("open_team_site")}
-          />
-        )}
+        {showCredits && <CreditsModal onClose={() => setShowCredits(false)} />}
       </div>
     </IconContext.Provider>
   );

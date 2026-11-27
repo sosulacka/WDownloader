@@ -44,17 +44,18 @@ export default function Select({
     }));
 
   function show() {
-    if (disabled || !trigger.current) return;
+    if (disabled || !trigger.current || options.length === 0) return;
     const rect = trigger.current.getBoundingClientRect();
-    const height = Math.min(options.length * 40 + 10, 270);
-    const below = window.innerHeight - rect.bottom - 12;
+    const zoom = Number(getComputedStyle(document.documentElement).zoom) || 1;
+    const desiredHeight = Math.min(options.length * 38 + 10, 270);
+    const below = (window.innerHeight - rect.bottom) / zoom - 12;
+    const above = rect.top / zoom - 12;
+    const opensUp = below < desiredHeight && above > below;
+    const height = Math.min(desiredHeight, opensUp ? above : below);
     setPosition({
-      left: rect.left,
-      width: rect.width,
-      top:
-        below < height && rect.top > height
-          ? rect.top - height - 6
-          : rect.bottom + 6,
+      left: rect.left / zoom,
+      width: rect.width / zoom,
+      top: opensUp ? rect.top / zoom - height - 6 : rect.bottom / zoom + 6,
       maxHeight: height,
     });
     setHighlight(

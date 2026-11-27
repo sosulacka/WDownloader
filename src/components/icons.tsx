@@ -29,17 +29,27 @@ function icon(
     duo,
     "sharp-duo": sharpDuo,
   };
-  function Icon(props: IconProps) {
+  function Icon({ size = 24, strokeWidth, ...props }: IconProps) {
     const { style, stroke } = useContext(IconContext);
     const Component = variants[style];
-    return <Component strokeWidth={stroke} {...props} />;
+    const grid = typeof size === "number" ? Math.max(16, Math.round(size / 4) * 4) : size;
+    const line = typeof grid === "number" ? (stroke * 24) / grid : stroke;
+    return (
+      <Component
+        aria-hidden="true"
+        focusable="false"
+        shapeRendering="geometricPrecision"
+        data-ui-icon=""
+        {...props}
+        size={grid}
+        strokeWidth={strokeWidth ?? line}
+      />
+    );
   }
   Icon.displayName = name;
   return Icon;
 }
 
-export const ArrowDown = icon("ArrowDown", R.ArrowDown, S.ArrowDown, T.ArrowDown, ST.ArrowDown);
-export const ArrowRight = icon("ArrowRight", R.ArrowRight, S.ArrowRight, T.ArrowRight, ST.ArrowRight);
 export const ArrowUpRight = icon("ArrowUpRight", R.ArrowUpRight, S.ArrowUpRight, T.ArrowUpRight, ST.ArrowUpRight);
 export const Bin2 = icon("Bin2", R.Bin2, S.Bin2, T.Bin2, ST.Bin2);
 export const Check = icon("Check", R.Check, S.Check, T.Check, ST.Check);
@@ -47,7 +57,6 @@ export const ChevronDown = icon("ChevronDown", R.ChevronDown, S.ChevronDown, T.C
 export const ChevronRight = icon("ChevronRight", R.ChevronRight, S.ChevronRight, T.ChevronRight, ST.ChevronRight);
 export const CircleAlert = icon("CircleAlert", R.CircleAlert, S.CircleAlert, T.CircleAlert, ST.CircleAlert);
 export const CircleCheck = icon("CircleCheck", R.CircleCheck, S.CircleCheck, T.CircleCheck, ST.CircleCheck);
-export const CircleHalf = icon("CircleHalf", R.CircleHalf, S.CircleHalf, T.CircleHalf, ST.CircleHalf);
 export const ClipboardCopy = icon("ClipboardCopy", R.ClipboardCopy, S.ClipboardCopy, T.ClipboardCopy, ST.ClipboardCopy);
 export const ClipboardPaste = icon("ClipboardPaste", R.ClipboardPaste, S.ClipboardPaste, T.ClipboardPaste, ST.ClipboardPaste);
 export const Clock = icon("Clock", R.Clock, S.Clock, T.Clock, ST.Clock);

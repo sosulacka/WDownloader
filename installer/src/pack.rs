@@ -1,5 +1,4 @@
-//! Собирает setup.exe: stub + zip с приложением (+ tools для офлайн-версии).
-//! pack --setup <stub.exe> --app <Wdownloader.exe> --license <file> --notice <file> --licenses <dir> [--tools <dir>] --out <file>
+//! Собирает setup.exe из приложения и его лицензий.
 
 use std::fs::File;
 use std::io::{self, Seek, Write};
@@ -26,7 +25,11 @@ fn collect_licenses(root: &Path, dir: &Path, files: &mut Vec<(String, PathBuf)>)
         if entry.file_type()?.is_dir() {
             collect_licenses(root, &path, files)?;
         } else if entry.file_type()?.is_file() {
-            let relative = path.strip_prefix(root).unwrap().to_string_lossy().replace('\\', "/");
+            let relative = path
+                .strip_prefix(root)
+                .unwrap()
+                .to_string_lossy()
+                .replace('\\', "/");
             files.push((format!("licenses/{relative}"), path));
         }
     }
@@ -37,7 +40,12 @@ fn main() -> io::Result<()> {
     let setup = arg("--setup").expect("--setup <stub.exe>");
     let app = arg("--app").expect("--app <Wdownloader.exe>");
     let out = arg("--out").expect("--out <file>");
-    let tools = arg("--tools");
+    if std::env::args().any(|argument| argument == "--tools") {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Компоненты ставятся отдельно.",
+        ));
+    }
     let license = arg("--license").expect("--license <file>");
     let notice = arg("--notice").expect("--notice <file>");
     let licenses = arg("--licenses").expect("--licenses <dir>");
@@ -48,18 +56,6 @@ fn main() -> io::Result<()> {
         ("NOTICE".to_string(), notice),
     ];
     collect_licenses(&licenses, &licenses, &mut files)?;
-    if let Some(dir) = tools {
-        let mut entries: Vec<_> = std::fs::read_dir(&dir)?
-            .filter_map(Result::ok)
-            .map(|e| e.path())
-            .filter(|p| p.is_file() && p.file_name().is_some_and(|n| n != ".gitkeep"))
-            .collect();
-        entries.sort();
-        for path in entries {
-            let name = path.file_name().unwrap().to_string_lossy().into_owned();
-            files.push((format!("tools/{name}"), path));
-        }
-    }
 
     // Zip пишется отдельно, чтобы смещения внутри него считались от нуля.
     let temp = out.with_extension("zip.tmp");

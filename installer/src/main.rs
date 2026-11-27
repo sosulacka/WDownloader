@@ -24,7 +24,6 @@ struct Info {
     version: &'static str,
     dir: String,
     installed: bool,
-    offline: bool,
     size: u64,
     ready: bool,
 }
@@ -88,7 +87,6 @@ fn info() -> Info {
             default_dir().display().to_string()
         },
         installed,
-        offline: payload.as_ref().is_some_and(Payload::offline),
         size: payload.as_mut().map(Payload::total_size).unwrap_or(0),
         ready: payload.is_some() || uninstall_mode(),
     }
@@ -266,16 +264,6 @@ fn launch(dir: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
-/// Сайт команды из пасхалки. Адрес зашит, фронт его не передаёт.
-#[tauri::command]
-fn open_site() -> Result<(), String> {
-    Command::new("explorer.exe")
-        .arg("https://wteam.su")
-        .spawn()
-        .map(|_| ())
-        .map_err(|e| e.to_string())
-}
-
 /// Закрывает окно. После удаления uninstall.exe и папка стираются через cmd,
 /// потому что запущенный exe не может удалить сам себя.
 #[tauri::command]
@@ -299,7 +287,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            info, pick_dir, install, uninstall, launch, open_site, quit
+            info, pick_dir, install, uninstall, launch, quit
         ])
         .setup(|app| {
             // Данные WebView во временной папке: установщик ничего не оставляет у пользователя.
@@ -317,7 +305,7 @@ fn main() {
                 .decorations(false)
                 .shadow(true)
                 .center()
-                .background_color(tauri::window::Color(9, 9, 10, 255))
+                .background_color(tauri::window::Color(27, 24, 22, 255))
                 .data_directory(data)
                 .build()?;
             let _ = app.get_webview_window("main");

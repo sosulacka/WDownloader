@@ -13,8 +13,9 @@ test("Настройки вида восстанавливаются из localS
       iconStyle: "sharp-duo",
       stroke: 2,
       motion: false,
+      scale: 85,
     }),
-    { theme: "light", iconStyle: "sharp-duo", stroke: 2, motion: false },
+    { theme: "light", iconStyle: "sharp-duo", stroke: 2, motion: false, scale: 85 },
   );
 });
 
@@ -26,6 +27,9 @@ test("Повреждённые и старые значения заменяют
     defaultAppearance,
   );
   assert.equal(parseAppearance({ theme: "system" }).theme, "system");
+  assert.equal(parseAppearance({ theme: "light" }).scale, 100);
+  for (const scale of [0, 95, 150, "125", null])
+    assert.equal(parseAppearance({ scale }).scale, 100);
 });
 
 test("Системная тема следует настройке ОС", () => {

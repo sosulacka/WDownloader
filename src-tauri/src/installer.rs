@@ -261,22 +261,6 @@ pub(super) fn open_tool_download(tool: String) -> Result<(), String> {
     Ok(())
 }
 
-/// Сайт команды из пасхалки. Адрес фиксирован, фронт не передаёт URL.
-#[tauri::command]
-pub(super) fn open_team_site() -> Result<(), String> {
-    #[cfg(windows)]
-    let mut cmd = command("explorer.exe");
-    #[cfg(target_os = "macos")]
-    let mut cmd = command("open");
-    #[cfg(all(unix, not(target_os = "macos")))]
-    let mut cmd = command("xdg-open");
-    cmd.kill_on_drop(false)
-        .arg("https://wteam.su")
-        .spawn()
-        .map_err(|e| e.to_string())?;
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

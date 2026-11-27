@@ -1,20 +1,13 @@
-// Собирает приложение и два установщика в dist-installer/:
-// лёгкий (только приложение) и офлайн (с yt-dlp, FFmpeg и Deno из tools/).
+// Собирает приложение и установщик в dist-installer/.
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
 const out = join(root, "dist-installer");
 const { version } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-const lite = process.argv.includes("--lite");
-const offline = process.argv.includes("--offline");
-if (lite && offline) throw new Error("Выберите --lite или --offline.");
-const tools = join(root, "tools");
-const needed = ["yt-dlp.exe", "ffmpeg.exe", "ffprobe.exe", "deno.exe"];
-const present = existsSync(tools) ? readdirSync(tools) : [];
-if (offline && !needed.every((name) => present.includes(name))) {
-  throw new Error("Не хватает компонентов офлайн-установщика. Запустите npm run setup:tools.");
+if (process.argv.includes("--offline")) {
+  throw new Error("Офлайн-установщик больше не собирается. Компоненты скачиваются из их репозиториев при первом запуске.");
 }
 const run = (cmd, args, cwd = root) =>
   execFileSync(cmd, args, { cwd, stdio: "inherit" });
@@ -36,9 +29,3 @@ const base = [
   "--licenses", join(root, "licenses"),
 ];
 run(pack, [...base, "--out", join(out, `Wdownloader-${version}-setup.exe`)]);
-
-if (!lite && needed.every((name) => present.includes(name))) {
-  run(pack, [...base, "--tools", tools, "--out", join(out, `Wdownloader-${version}-offline-setup.exe`)]);
-} else if (!lite) {
-  console.log("Офлайн-версия пропущена: в tools/ нет компонентов. Запустите npm run setup:tools.");
-}

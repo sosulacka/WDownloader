@@ -1,5 +1,4 @@
 @font-face {
-  --ease: cubic-bezier(0.7, 0, 0.2, 1);
   font-family: "Manrope";
   font-weight: 200 800;
   font-display: block;
@@ -14,50 +13,68 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF;
 }
 :root {
-  --bg: #09090a;
-  --surface: #111113;
-  --surface-2: #17171a;
-  --surface-3: #1f1f23;
-  --hover: #ffffff0b;
-  --line: #ffffff10;
-  --line-2: #ffffff1c;
-  --line-3: #ffffff30;
-  --text: #f5f5f4;
-  --text-2: #a3a3a9;
-  --text-3: #66666d;
-  --ink: #f5f5f4;
-  --ink-text: #0a0a0b;
-  --ink-hover: #ffffff;
-  --hero: #0d0d0f;
-  --hero-glow: #ffffff0a;
-  --ring: #ffffff03;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --spring: cubic-bezier(0.34, 1.5, 0.64, 1);
+  --bg: #1b1816;
+  --bg-raised: #211d1a;
+  --surface: #27221f;
+  --surface-2: #302923;
+  --surface-3: #3a322c;
+  --text: #f5ede4;
+  --text-2: #c3b5a9;
+  --text-3: #ae9e91;
+  --ink: #edab91;
+  --ink-text: #29170f;
+  --ink-hover: #f5bb9f;
+  --accent: #edab91;
+  --accent-soft: #edab911b;
+  --error: #f6aa9f;
+  --success: #aed0a7;
+  --hover: #fff0dc0c;
+  --press: #fff0dc15;
+  --line: #fff0dc12;
+  --line-2: #fff0dc26;
+  --line-3: #fff0dc42;
+  --wave: #ceb7a6;
+  --wave-dim: #ceb7a655;
+  --backdrop: #100c09bd;
+  --shadow: 0 10px 26px -13px #0c0807bf;
+  --shadow-pop: 0 16px 44px -12px #0c0807ce;
+  --hero: var(--bg-raised);
+  --ease: cubic-bezier(0.22, 0.64, 0.36, 1);
+  --ease-out: var(--ease);
+  --spring: var(--ease);
+  font: 14px/1.5 "Manrope", system-ui, sans-serif;
   color-scheme: dark;
-  font-family: "Manrope", system-ui, sans-serif;
-  font-size: 14px;
-  -webkit-font-smoothing: antialiased;
 }
 [data-theme="light"] {
-  --bg: #f3f3f1;
-  --surface: #ffffff;
-  --surface-2: #ffffff;
-  --surface-3: #e6e6e3;
-  --hover: #0000000a;
-  --line: #00000010;
-  --line-2: #0000001a;
-  --line-3: #00000030;
-  --text: #0a0a0b;
-  --text-2: #56565c;
-  --text-3: #8d8d93;
-  --ink: #0a0a0b;
-  --ink-text: #fafafa;
-  --ink-hover: #2a2a2e;
-  --hero: #f8f8f6;
-  --hero-glow: #0000000a;
-  --ring: #00000004;
+  --bg: #f5f0e8;
+  --bg-raised: #eee7dc;
+  --surface: #fffcf7;
+  --surface-2: #f7f0e7;
+  --surface-3: #ece1d4;
+  --text: #2a211b;
+  --text-2: #594c41;
+  --text-3: #6e5b4e;
+  --ink: #933d28;
+  --ink-text: #fff8ef;
+  --ink-hover: #7f301f;
+  --accent: #933d28;
+  --accent-soft: #933d2815;
+  --error: #a2332a;
+  --success: #3c6740;
+  --hover: #5036210b;
+  --press: #50362118;
+  --line: #54341f16;
+  --line-2: #54341f28;
+  --line-3: #54341f47;
+  --wave: #756052;
+  --wave-dim: #7560524f;
+  --backdrop: #271b125e;
+  --shadow: 0 10px 26px -13px #8b6f5066;
+  --shadow-pop: 0 16px 44px -12px #6f54366b;
   color-scheme: light;
 }
+
+
 * {
   box-sizing: border-box;
 }
@@ -83,7 +100,7 @@ button:disabled {
   cursor: default;
 }
 :focus-visible {
-  outline: 2px solid var(--text);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -101,25 +118,6 @@ svg {
   stroke-linecap: round;
   stroke-linejoin: round;
   flex-shrink: 0;
-}
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
-@keyframes draw {
-  from {
-    stroke-dashoffset: 1;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes drop {
-  50% {
-    transform: translateY(2px);
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -145,7 +143,7 @@ svg {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-3);
-  margin-left: 300px;
+  margin-left: 276px;
 }
 .titlebar-controls {
   display: flex;
@@ -158,6 +156,15 @@ svg {
   place-items: center;
   color: var(--text-2);
   transition: background 0.15s, color 0.15s;
+}
+.titlebar-controls #theme {
+  display: flex;
+  width: auto;
+  gap: 7px;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 .titlebar-controls button:hover {
   background: var(--hover);
@@ -195,7 +202,7 @@ svg {
 .layout {
   height: 100%;
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 260px minmax(0, 1fr);
 }
 
 /* ---------- Левая колонка ---------- */
@@ -203,61 +210,25 @@ svg {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 28px 26px 22px;
+  padding: 46px 24px 30px;
   border-right: 1px solid var(--line);
-  background:
-    radial-gradient(120% 70% at 0% 0%, var(--hero-glow), transparent 60%),
-    var(--hero);
+  background: var(--hero);
   overflow: hidden;
 }
-.hero::after {
-  content: "";
-  position: absolute;
-  inset: auto -40px -80px auto;
-  width: 240px;
-  height: 240px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  box-shadow: 0 0 0 40px var(--ring), 0 0 0 80px var(--ring);
-  pointer-events: none;
-}
 .logo {
+  display: block;
   width: 52px;
   height: 52px;
   overflow: visible;
-  animation: rise 0.6s var(--ease-out) both;
-}
-.logo-bg {
-  fill: var(--ink);
-  stroke: none;
-}
-.logo-glyph path,
-.logo .tray {
-  stroke: var(--ink-text);
-  stroke-width: 2.6;
-  stroke-dasharray: 1;
-  animation: draw 0.9s var(--ease-out) 0.2s both;
-}
-.logo .v2 {
-  opacity: 0.45;
-  animation-delay: 0.32s;
-}
-.logo .tray {
-  stroke-width: 2.2;
-  animation-delay: 0.5s;
-}
-body.busy .logo-glyph {
-  animation: drop 1.3s ease-in-out infinite;
 }
 .hero-text {
   margin-top: 34px;
-  animation: rise 0.6s var(--ease-out) 0.1s both;
 }
 .hero h1 {
   margin: 0 0 10px;
-  font-size: 27px;
-  font-weight: 800;
-  letter-spacing: 0.4px;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -1.3px;
 }
 .hero p {
   font-size: 13px;
@@ -269,7 +240,6 @@ body.busy .logo-glyph {
   display: flex;
   flex-direction: column;
   gap: 9px;
-  animation: rise 0.6s var(--ease-out) 0.2s both;
 }
 .facts div {
   display: flex;
@@ -302,8 +272,8 @@ body.busy .logo-glyph {
   flex-direction: column;
   opacity: 0;
   visibility: hidden;
-  transform: translateX(18px);
-  transition: opacity 0.35s, transform 0.45s var(--ease-out), visibility 0.35s;
+  transform: translateX(6px);
+  transition: opacity 0.18s, transform 0.2s var(--ease-out), visibility 0.18s;
 }
 .screen.active {
   opacity: 1;
@@ -311,7 +281,7 @@ body.busy .logo-glyph {
   transform: none;
 }
 .screen.leaving {
-  transform: translateX(-18px);
+  transform: translateX(-6px);
 }
 .screen h2 {
   margin: 0 0 6px;
@@ -468,7 +438,7 @@ body.busy .logo-glyph {
   align-items: baseline;
   gap: 4px;
   font-size: 72px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -3px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -563,6 +533,8 @@ body.busy .logo-glyph {
 
 /* ---------- Пасхалка: тройной клик по логотипу ---------- */
 #logo {
+  align-self: flex-start;
+  border-radius: 13px;
   cursor: pointer;
   transition: transform 0.25s var(--spring);
 }
@@ -676,23 +648,6 @@ body.busy .logo-glyph {
   font-size: 13px;
   font-weight: 700;
 }
-.credits-link {
-  width: 100%;
-  padding: 15px 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--line-2);
-  font-size: 16px;
-  font-weight: 600;
-  animation: fade 0.5s 0.5s both;
-}
-.credits-link svg {
-  transition: transform 0.3s var(--ease-out);
-}
-.credits-link:hover svg {
-  transform: translate(3px, -3px);
-}
 @keyframes fade {
   from {
     opacity: 0;
@@ -721,3 +676,6 @@ body.busy .logo-glyph {
     transform: rotate(-14deg) scale(0.6);
   }
 }
+
+.error { color: var(--error); }
+@keyframes rise { from { opacity: 0; transform: translateY(4px); } }

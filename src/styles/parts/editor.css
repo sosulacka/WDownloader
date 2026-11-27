@@ -20,9 +20,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
-  letter-spacing: 1px;
   color: var(--text-2);
 }
 .trim-switch {
@@ -65,42 +64,34 @@
   background: var(--ink-text);
   transform: translateX(12px);
 }
-/* Видео всегда на чёрном, в любой теме. */
 .video-stage {
   position: relative;
-  aspect-ratio: 16 / 7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: #050505;
-}
-.video-stage.loaded {
-  aspect-ratio: 16 / 9;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: var(--video-ratio, 16 / 9);
   max-height: 400px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--media-bg);
 }
 .video-stage > img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(1) contrast(1.05);
-  opacity: 0.45;
-  transform: scale(1.04);
-  transition:
-    transform 0.8s var(--ease-out),
-    opacity 0.4s;
-}
-.video-stage:hover > img {
-  transform: scale(1.08);
   opacity: 0.55;
 }
 .video-stage video {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  max-height: 400px;
   object-fit: contain;
-  animation: fade 0.4s;
+  object-position: center;
+  animation: fade 0.18s;
 }
 .video-stage-shade {
   position: absolute;
@@ -114,32 +105,18 @@
   align-items: center;
   gap: 14px;
   padding: 20px;
-  color: #f5f5f4;
+  color: var(--media-text);
   font-size: 12.5px;
   font-weight: 600;
 }
 .preview-play > svg {
   box-sizing: content-box;
-  padding: 18px;
+  padding: 15px;
   border-radius: 50%;
-  background: #f5f5f4;
-  color: #0a0a0b;
-  box-shadow: 0 0 0 0 #f5f5f455;
-  transition: transform 0.3s var(--spring);
-  animation: halo 2.4s var(--ease) infinite;
+  background: var(--media-text);
+  color: var(--media-bg);
 }
-.preview-play:hover > svg {
-  transform: scale(1.08);
-}
-@keyframes halo {
-  0% {
-    box-shadow: 0 0 0 0 #f5f5f455;
-  }
-  70%,
-  100% {
-    box-shadow: 0 0 0 18px #f5f5f400;
-  }
-}
+.preview-play:hover > svg { background: var(--ink); }
 .preview-pending {
   position: absolute;
   inset: 0;
@@ -148,8 +125,8 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: #050505c4;
-  color: #f5f5f4;
+  background: var(--media-badge);
+  color: var(--media-text);
   animation: fade 0.25s;
 }
 .preview-pending strong {
@@ -227,9 +204,8 @@
   gap: 12px;
 }
 .timeline-topline > span {
-  font-size: 10.5px;
-  font-weight: 650;
-  letter-spacing: 1px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-3);
 }
 .click-modes {
@@ -282,14 +258,14 @@
       90deg,
       transparent 0,
       transparent calc(12.5% - 1px),
-      var(--grid) calc(12.5% - 1px),
-      var(--grid) 12.5%
+      var(--line) calc(12.5% - 1px),
+      var(--line) 12.5%
     ),
     linear-gradient(
       0deg,
       transparent calc(50% - 0.5px),
-      var(--grid) calc(50% - 0.5px),
-      var(--grid) calc(50% + 0.5px),
+      var(--line) calc(50% - 0.5px),
+      var(--line) calc(50% + 0.5px),
       transparent calc(50% + 0.5px)
     );
 }
@@ -480,11 +456,7 @@
     background 0.2s;
 }
 .player-play:not(:disabled):hover {
-  transform: scale(1.07);
   background: var(--ink-hover);
-}
-.player-play:not(:disabled):active {
-  transform: scale(0.94);
 }
 .player-play:disabled {
   opacity: 1;
@@ -569,7 +541,7 @@
 }
 .time-field input:focus {
   border-color: var(--text);
-  box-shadow: 0 0 0 4px var(--halo);
+  outline: 2px solid var(--accent);
 }
 .time-field small {
   display: block;
@@ -640,9 +612,6 @@
 .trim-summary .text-button {
   font-size: 12px;
 }
-.trim-summary .text-button:hover > svg {
-  transform: rotate(-90deg);
-}
 .editor-hint {
   margin-top: 14px;
   font-size: 11.5px;
@@ -660,9 +629,18 @@
 }
 .media-editor:fullscreen .video-stage.loaded {
   flex: 1;
+  min-height: 180px;
+  max-height: none;
   aspect-ratio: auto;
-  max-height: calc(100vh - 300px);
 }
-.media-editor:fullscreen video {
-  max-height: calc(100vh - 300px);
+
+.sponsor-range {
+  position: absolute;
+  z-index: 2;
+  inset: 3px auto 3px 0;
+  border: 1px solid color-mix(in srgb, var(--text-2) 62%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text) 19%, transparent);
+  pointer-events: none;
 }
+.sponsor-legend { margin: 7px 0 0; color: var(--text-2); font-size: 12px; }

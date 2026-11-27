@@ -15,7 +15,7 @@
           <button type="button" data-language="ru" aria-pressed="true">RU</button>
           <button type="button" data-language="en" aria-pressed="false">EN</button>
         </div>
-        <button id="theme" aria-label="Светлая тема" data-i18n-aria-label="Светлая тема"><span class="theme-icon" id="theme-icon"></span></button>
+        <button id="theme" aria-label="Светлая тема" data-i18n-aria-label="Светлая тема"><span class="theme-icon" id="theme-icon"></span><span id="theme-label" data-i18n="Светлая тема">Светлая тема</span></button>
         <button id="minimize" aria-label="Свернуть" data-i18n-aria-label="Свернуть">
           <svg viewBox="0 0 24 24"><path d="M5 12H19" /></svg>
         </button>
@@ -27,21 +27,10 @@
 
     <main class="layout">
       <aside class="hero" data-tauri-drag-region>
-        <svg class="logo" id="logo" viewBox="0 0 32 32" aria-hidden="true">
-          <rect class="logo-bg" width="32" height="32" rx="9" />
-          <g class="logo-glyph">
-            <path class="v1" d="M8 8 12 18 16 10" pathLength="1" />
-            <path class="v2" d="M16 10 20 18 24 8" pathLength="1" />
-          </g>
-          <path
-            class="tray"
-            d="M8.5 21v1.25A2.25 2.25 0 0 0 10.75 24.5h10.5a2.25 2.25 0 0 0 2.25-2.25V21"
-            pathLength="1"
-          />
-        </svg>
+        <button type="button" id="logo" aria-label="Wdownloader"><img class="logo" src="icon.svg" alt="" draggable="false" /></button>
         <div class="hero-text" data-tauri-drag-region>
-          <h1>WDOWNLOADER</h1>
-          <p data-i18n="Видео и аудио с YouTube в нужном формате.">Видео и аудио с YouTube в нужном формате.</p>
+          <h1>Wdownloader</h1>
+          <p data-i18n="Загрузки видео и аудио для Windows.">Загрузки видео и аудио для Windows.</p>
         </div>
         <dl class="facts" id="facts"></dl>
         <span class="credit">WTEAM · v<span id="version"></span></span>
@@ -65,7 +54,7 @@
             <span><strong data-i18n="Запустить после установки">Запустить после установки</strong><small data-i18n="Откроем приложение сразу.">Откроем приложение сразу.</small></span>
             <span class="toggle"><i></i></span>
           </button>
-          <p class="error" id="setup-error" hidden></p>
+          <p role="alert" class="error" id="setup-error" hidden></p>
           <div class="actions">
             <span class="size" id="size"></span>
             <button class="button primary" id="install">
@@ -100,7 +89,7 @@
         <!-- Прогресс -->
         <div class="screen" data-screen="progress">
           <div class="percent"><span id="percent">0</span><small>%</small></div>
-          <div class="track"><i id="bar"></i></div>
+          <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="current"><i id="bar"></i></div>
           <p class="current" id="current" data-i18n="Готовим установку…">Готовим установку…</p>
         </div>
 
@@ -128,18 +117,7 @@
           <svg viewBox="0 0 24 24"><path d="M7 7L17 17M17 7L7 17" /></svg>
         </button>
         <span class="credits-logo">
-          <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-            <rect class="logo-bg" width="32" height="32" rx="9" />
-            <g class="logo-glyph">
-              <path class="v1" d="M8 8 12 18 16 10" pathLength="1" />
-              <path class="v2" d="M16 10 20 18 24 8" pathLength="1" />
-            </g>
-            <path
-              class="tray"
-              d="M8.5 21v1.25A2.25 2.25 0 0 0 10.75 24.5h10.5a2.25 2.25 0 0 0 2.25-2.25V21"
-              pathLength="1"
-            />
-          </svg>
+          <img class="logo" src="icon.svg" alt="" draggable="false" />
         </span>
         <h2 id="credits-title" class="credits-title">
           <span style="--i: 0">CREATED</span>
@@ -150,10 +128,6 @@
           <div><dt data-i18n="Разработчик">Разработчик</dt><dd>CYN</dd></div>
           <div><dt>Discord</dt><dd>@syswow64deleted</dd></div>
         </dl>
-        <button class="credits-link" id="credits-site">
-          wteam.su
-          <svg viewBox="0 0 24 24"><path d="M6 6H17.5C17.77614 6 18 6.22386 18 6.5V18M7.2 16.8L17.4 6.6" /></svg>
-        </button>
       </section>
     </div>
     <script type="module" src="app.js"></script>

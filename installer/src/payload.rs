@@ -37,7 +37,10 @@ impl Seek for Slice {
             SeekFrom::Current(n) => self.pos as i64 + n,
         };
         if next < 0 {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, "seek before start"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "seek before start",
+            ));
         }
         self.pos = next as u64;
         self.file.seek(SeekFrom::Start(self.start + self.pos))?;
@@ -83,9 +86,5 @@ impl Payload {
         (0..self.zip.len())
             .filter_map(|i| self.zip.by_index(i).ok().map(|e| e.size()))
             .sum()
-    }
-
-    pub fn offline(&self) -> bool {
-        self.zip.file_names().any(|n| n.starts_with("tools/"))
     }
 }

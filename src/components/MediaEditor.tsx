@@ -25,6 +25,8 @@ import {
   type MediaSource,
 } from "../lib/media";
 
+import type { SponsorSegment } from "../lib/types";
+
 type Preview = { path: string; duration: number; peaks: number[] };
 type Progress = { id: string; stage: string; progress: number | null };
 type Props = {
@@ -32,6 +34,7 @@ type Props = {
   clip?: ClipRange | null;
   onClipChange?: (clip: ClipRange | null) => void;
   autoPrepare?: boolean;
+  sponsorSegments?: SponsorSegment[];
 };
 const stages: Record<string, string> = {
   queued: "Ожидаем подготовки",
@@ -101,8 +104,10 @@ export default function MediaEditor({
   clip = null,
   onClipChange,
   autoPrepare = false,
+  sponsorSegments = [],
 }: Props) {
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [videoRatio, setVideoRatio] = useState(16 / 9);
   const [pending, setPending] = useState(false);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [error, setError] = useState("");
@@ -301,6 +306,9 @@ export default function MediaEditor({
       if (media.current) {
         media.current.volume = volume;
         media.current.playbackRate = Number(speed);
+        if (media.current instanceof HTMLVideoElement && media.current.videoHeight > 0) {
+          setVideoRatio(media.current.videoWidth / media.current.videoHeight);
+        }
       }
     },
     onError: () => {
@@ -320,7 +328,7 @@ export default function MediaEditor({
       <div className="editor-heading">
         <span>
           <Play size={14} />
-          {source.kind === "audio" ? t("АУДИОПЛЕЕР") : t("ВИДЕОПЛЕЕР")}
+          {source.kind === "audio" ? t("Аудиоплеер") : t("Видеоплеер")}
         </span>
         {onClipChange && (
           <button
@@ -339,7 +347,10 @@ export default function MediaEditor({
         )}
       </div>
       {source.kind === "video" && (
-        <div className={`video-stage ${preview ? "loaded" : ""}`}>
+        <div
+          className={`video-stage ${preview ? "loaded" : ""}`}
+          style={preview ? { "--video-ratio": videoRatio } as React.CSSProperties : undefined}
+        >
           {preview ? (
             <video
               ref={(el) => {
@@ -444,7 +455,7 @@ export default function MediaEditor({
       )}
       <div className="editor-body">
         <div className="timeline-topline">
-          <span>{clip ? t("СОХРАНИТСЯ ВЫДЕЛЕННАЯ ЧАСТЬ") : t("ШКАЛА ВРЕМЕНИ")}</span>
+          <span>{clip ? t("Сохранится выделенная часть") : t("Шкала времени")}</span>
           {clip && (
             <div className="click-modes">
               <span>{t("Клик:")}</span>
@@ -478,6 +489,13 @@ export default function MediaEditor({
           aria-label={t("Шкала времени")}
         >
           <div className="timeline-grid" />
+          {sponsorSegments.map(({ segment: [start, end], category }, index) => {
+            if (start >= total) return null;
+            const label = t(category === "intro" ? "Интро" : "Реклама");
+            return <span key={index} className="sponsor-range" role="img"
+              aria-label={`${label} ${timecode(start)}–${timecode(end)}`}
+              style={{ left: `${start / total * 100}%`, width: `${(Math.min(end, total) - start) / total * 100}%` }} />;
+          })}
           {preview ? (
             <svg
               className="waveform"
@@ -605,6 +623,7 @@ export default function MediaEditor({
             <i />
           </button>
         </div>
+        {sponsorSegments.length > 0 && <p className="sponsor-legend">{t("Отметки SponsorBlock на исходной дорожке")}</p>}
         <div className="timeline-ticks">
           {Array.from({ length: 5 }, (_, i) => (
             <span key={i}>{timecode((i / 4) * total)}</span>

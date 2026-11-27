@@ -1,11 +1,14 @@
 export type Theme = "dark" | "light" | "system";
 export type ResolvedTheme = Exclude<Theme, "system">;
 export type IconStyle = "round" | "sharp" | "duo" | "sharp-duo";
+export const interfaceScales = [85, 90, 100, 110, 125] as const;
+export type InterfaceScale = (typeof interfaceScales)[number];
 export type Appearance = {
   theme: Theme;
   iconStyle: IconStyle;
   stroke: number;
   motion: boolean;
+  scale: InterfaceScale;
 };
 
 export const appearanceKey = "wd-appearance";
@@ -22,6 +25,7 @@ export const defaultAppearance: Appearance = {
   iconStyle: "round",
   stroke: 1.75,
   motion: true,
+  scale: 100,
 };
 
 /** Принимает что угодно из localStorage и возвращает корректные настройки. */
@@ -42,6 +46,7 @@ export function parseAppearance(raw: unknown): Appearance {
       typeof value.motion === "boolean"
         ? value.motion
         : defaultAppearance.motion,
+    scale: interfaceScales.find((scale) => scale === value.scale) ?? defaultAppearance.scale,
   };
 }
 

@@ -25,7 +25,7 @@
   border-radius: 20px;
   border: 1px solid var(--line-2);
   background: var(--bg);
-  animation: credits-logo 0.7s var(--spring) both;
+  animation: credits-logo 0.23s var(--ease-out) both;
 }
 @keyframes credits-logo {
   from {
@@ -33,25 +33,17 @@
     transform: rotate(-14deg) scale(0.6);
   }
 }
-.credits-logo .logo-glyph path,
-.credits-logo .logo-tray {
-  stroke-dasharray: 1;
-  animation: logo-draw 0.9s var(--ease-out) 0.2s both;
-}
-.credits-logo .logo-tray {
-  animation-delay: 0.45s;
-}
 .credits-title {
   margin: 28px 0 26px;
   font-size: 42px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.02;
   letter-spacing: -1.4px;
 }
 .credits-title > span {
   display: inline-block;
   margin-right: 0.24em;
-  animation: rise 0.5s var(--ease-out) both;
+  animation: rise 0.24s var(--ease-out) both;
   animation-delay: calc(0.15s + var(--i) * 80ms);
 }
 .credits-title > span:last-child {
@@ -65,7 +57,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  animation: fade 0.5s 0.4s both;
+  animation: fade 0.23s 0.18s both;
 }
 .credits-list > div {
   display: flex;
@@ -82,24 +74,6 @@
   font-size: 13px;
   font-weight: 700;
   overflow-wrap: anywhere;
-}
-.credits-link {
-  width: 100%;
-  padding: 18px 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--line-2);
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text);
-  animation: fade 0.5s 0.5s both;
-}
-.credits-link > svg {
-  transition: transform 0.3s var(--ease-out);
-}
-.credits-link:hover > svg {
-  transform: translate(3px, -3px);
 }
 @media (max-width: 760px) {
   .credits-title {

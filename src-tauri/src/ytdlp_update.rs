@@ -64,7 +64,7 @@ pub(super) async fn update_ytdlp(
         .acquire()
         .await
         .map_err(|e| e.to_string())?;
-    if !state.controls.lock().unwrap().is_empty() {
+    if !state.controls.lock().unwrap().is_empty() || state.extras_slot.available_permits() == 0 {
         return Ok(UpdateResult {
             status: "deferred",
             version: None,

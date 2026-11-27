@@ -24,7 +24,7 @@ function show(name) {
     const active = screen.dataset.screen === name;
     if (screen.classList.contains("active") && !active) {
       screen.classList.add("leaving");
-      setTimeout(() => screen.classList.remove("leaving"), 450);
+      setTimeout(() => screen.classList.remove("leaving"), 200);
     }
     screen.classList.toggle("active", active);
   }
@@ -67,7 +67,6 @@ const stages = {
   remove: "Удаляем",
   done: "Готово",
 };
-let shown = 0;
 function paintProgress(payload) {
   const label = t(stages[payload.stage] || "");
   const file = ["Ярлыки", "Данные приложения"].includes(payload.file) ? t(payload.file) : payload.file;
@@ -77,15 +76,8 @@ listen("progress", ({ payload }) => {
   lastProgress = payload;
   const value = Math.round(payload.progress);
   $("bar").style.transform = `scaleX(${payload.progress / 100})`;
-  // Число догоняет реальный процент, а не прыгает.
-  const target = value;
-  const tick = () => {
-    if (shown === target) return;
-    shown += Math.sign(target - shown);
-    $("percent").textContent = shown;
-    requestAnimationFrame(tick);
-  };
-  tick();
+  $("percent").textContent = value;
+  $("bar").parentElement.setAttribute("aria-valuenow", String(value));
   paintProgress(payload);
 });
 
@@ -145,7 +137,9 @@ function paintThemeButton() {
   icon.style.animation = "none";
   void icon.offsetWidth;
   icon.style.animation = "";
-  $("theme").setAttribute("aria-label", dark ? t("Светлая тема") : t("Тёмная тема"));
+  const label = t(dark ? "Светлая тема" : "Тёмная тема");
+  $("theme").setAttribute("aria-label", label);
+  $("theme-label").textContent = label;
 }
 
 function renderLanguage() {
@@ -171,9 +165,8 @@ function renderLanguage() {
       $("done-title").textContent = t("Wdownloader удалён");
       $("done-lead").textContent = t("Спасибо, что пользовались. Скачанные файлы на месте.");
     } else {
-      fact("Сборка", t(info.offline ? "Офлайн" : "Лёгкая"));
       fact("Размер", info.size ? mb(info.size) : t("Нет данных"));
-      fact("Компоненты", t(info.offline ? "Внутри" : "Скачаются при запуске"));
+      fact("Компоненты", t("Скачаются при запуске"));
       $("size").textContent = info.size ? t("Займёт {0}", { 0: mb(info.size) }) : "";
       if (info.installed) {
         $("setup-title").textContent = t("Обновить Wdownloader");
@@ -273,7 +266,6 @@ $("logo").addEventListener("click", () => {
 });
 $("credits").addEventListener("click", (e) => e.target === $("credits") && closeCredits());
 $("credits-close").addEventListener("click", closeCredits);
-$("credits-site").addEventListener("click", () => invoke("open_site").catch(() => {}));
 document.addEventListener("keydown", (e) => e.key === "Escape" && closeCredits());
 
 $("minimize").addEventListener("click", () => win.minimize());

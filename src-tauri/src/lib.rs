@@ -13,11 +13,17 @@ use tokio::{
     process::Command,
     sync::{watch, Semaphore},
 };
+mod render;
+use render::{audio_filter, render_media};
+mod extras;
 mod installer;
-mod net;
-mod youtube_login;
+mod platform;
+use platform::{is_youtube, normalize_url};
+mod output;
 mod preview;
+mod youtube_login;
 mod youtube_session;
+mod ytdlp_transport;
 mod ytdlp_update;
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -39,6 +45,14 @@ struct DownloadRequest {
     metadata: bool,
     #[serde(default)]
     clip: Option<ClipRange>,
+    #[serde(default)]
+    sponsor_block: bool,
+    #[serde(default)]
+    normalize_audio: bool,
+    #[serde(default)]
+    remove_silence: bool,
+    #[serde(default)]
+    enhance_voice: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -61,6 +75,7 @@ struct DownloadState {
     processes: Mutex<HashMap<String, u32>>,
     slot: Semaphore,
     preview_slot: Semaphore,
+    extras_slot: Semaphore,
     install_slot: Semaphore,
     history: PathBuf,
 }
@@ -87,6 +102,10 @@ struct VideoInfo {
     thumbnail: String,
     heights: Vec<u64>,
     views: Option<u64>,
+    platform: &'static str,
+    has_video: bool,
+    has_audio: bool,
+    subtitles: Vec<String>,
 }
 
 fn command(path: impl AsRef<std::ffi::OsStr>) -> Command {
@@ -95,46 +114,6 @@ fn command(path: impl AsRef<std::ffi::OsStr>) -> Command {
     #[cfg(windows)]
     cmd.creation_flags(0x08000000);
     cmd
-}
-
-fn normalize_url(input: &str) -> Result<String, String> {
-    let url = url::Url::parse(input.trim())
-        .map_err(|_| "Вставьте полную ссылку на видео YouTube.".to_string())?;
-    if !matches!(url.scheme(), "https" | "http")
-        || !url.username().is_empty()
-        || url.password().is_some()
-        || url.port().is_some()
-    {
-        return Err("Нужна обычная ссылка https:// на YouTube.".into());
-    }
-    let host = url.host_str().unwrap_or("");
-    let id = match host {
-        "youtu.be" | "www.youtu.be" => url.path().trim_start_matches('/').to_string(),
-        "youtube.com" | "www.youtube.com" | "m.youtube.com" | "music.youtube.com" => {
-            if url.path() == "/watch" {
-                url.query_pairs()
-                    .find(|(k, _)| k == "v")
-                    .map(|(_, v)| v.into_owned())
-                    .unwrap_or_default()
-            } else {
-                let parts: Vec<_> = url.path().trim_matches('/').split('/').collect();
-                if parts.len() == 2 && matches!(parts[0], "shorts" | "live" | "embed") {
-                    parts[1].to_string()
-                } else {
-                    String::new()
-                }
-            }
-        }
-        _ => return Err("Поддерживаются ссылки youtube.com и youtu.be.".into()),
-    };
-    if id.len() != 11
-        || !id
-            .bytes()
-            .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-')
-    {
-        return Err("Не удалось найти ID видео. Вставьте ссылку на отдельный ролик.".into());
-    }
-    Ok(format!("https://www.youtube.com/watch?v={id}"))
 }
 
 fn locate(app: &tauri::AppHandle, name: &str) -> Option<PathBuf> {
@@ -155,13 +134,18 @@ fn locate(app: &tauri::AppHandle, name: &str) -> Option<PathBuf> {
         .find(|p| p.is_file())
 }
 
-fn ytdlp(app: &tauri::AppHandle) -> Result<(Command, Option<youtube_session::SessionFile>), String> {
+fn ytdlp(
+    app: &tauri::AppHandle,
+    url: &str,
+) -> Result<(Command, Option<youtube_session::SessionFile>), String> {
     let path = locate(app, "yt-dlp")
         .ok_or("Не найден yt-dlp. Повторите установку компонентов в настройках приложения.")?;
     let mut cmd = command(path);
     cmd.args([
         "--ignore-config",
         "--no-playlist",
+        "--playlist-items",
+        "1",
         "--no-colors",
         "--encoding",
         "utf-8",
@@ -172,10 +156,6 @@ fn ytdlp(app: &tauri::AppHandle) -> Result<(Command, Option<youtube_session::Ses
         "--extractor-retries",
         "2",
     ]);
-    // Свой прокси: DNS-over-HTTPS, обход сброса соединения и быстрый IPv4.
-    if let Some(proxy) = net::proxy() {
-        cmd.arg("--proxy").arg(proxy);
-    }
     // Кэш yt-dlp (расшифровка подписи плеера) между запусками: следующие запросы быстрее.
     if let Ok(dir) = app.path().app_cache_dir() {
         cmd.arg("--cache-dir").arg(dir.join("yt-dlp"));
@@ -187,7 +167,11 @@ fn ytdlp(app: &tauri::AppHandle) -> Result<(Command, Option<youtube_session::Ses
         cmd.arg("--js-runtimes")
             .arg(format!("deno:{}", path.display()));
     }
-    let session = youtube_session::prepare(app)?;
+    let session = if is_youtube(url) {
+        youtube_session::prepare(app)?
+    } else {
+        None
+    };
     if let Some(session) = &session {
         cmd.arg("--cookies").arg(&session.path);
     }
@@ -218,24 +202,31 @@ fn check_dependencies(app: tauri::AppHandle) -> Dependencies {
     }
 }
 
-fn error_message(stderr: &[u8]) -> String {
+fn error_message(stderr: &[u8], url: &str) -> String {
     let text = String::from_utf8_lossy(stderr);
     let lower = text.to_lowercase();
-    if lower.contains("getaddrinfo failed") || lower.contains("failed to resolve")
+    if lower.contains("getaddrinfo failed")
+        || lower.contains("failed to resolve")
         || lower.contains("name or service not known")
     {
-        return "Не удалось найти адрес YouTube, даже через защищённый DNS. Проверьте подключение к интернету и нажмите Повторить.".into();
+        return "Не удалось найти адрес платформы. Проверьте подключение и попробуйте ещё раз."
+            .into();
     }
-    if lower.contains("sign in to confirm") || lower.contains("confirm you're not a bot")
-        || lower.contains("confirm you’re not a bot")
+    if is_youtube(url)
+        && (lower.contains("sign in to confirm")
+            || lower.contains("confirm you're not a bot")
+            || lower.contains("confirm you’re not a bot"))
     {
-        return "YouTube просит подтвердить, что вы не бот. Нажмите Войти в YouTube: вход в приложении один раз, дальше ролики открываются без проверки.".into();
+        return "YouTube просит подтвердить, что вы не бот. Войдите в YouTube или импортируйте сессию в настройках.".into();
+    }
+    if let Some(message) = ytdlp_transport::connection_message(&text) {
+        return message.into();
     }
     if lower.contains("connectionreseterror")
         || lower.contains("connection was reset")
         || lower.contains("winerror 10054")
     {
-        return "Соединение с YouTube сброшено сетью. Нажмите Повторить. Если не помогает, откройте ролик в браузере или включите VPN для всего компьютера.".into();
+        return "Соединение с платформой сброшено. Попробуйте ещё раз или откройте ссылку в браузере.".into();
     }
     text.lines()
         .rev()
@@ -250,52 +241,96 @@ fn error_message(stderr: &[u8]) -> String {
 #[tauri::command]
 async fn inspect_video(app: tauri::AppHandle, url: String) -> Result<VideoInfo, String> {
     let url = normalize_url(&url)?;
-    let (mut cmd, _session) = ytdlp(&app)?;
-    cmd.args([
-        "--dump-single-json",
-        "--skip-download",
-        "--no-warnings",
-        // Для информации о ролике не нужны субтитры, комментарии и HLS-манифесты.
-        "--extractor-args",
-        "youtube:skip=hls,translated_subs",
-        "--no-check-formats",
-        "--",
+    let output = ytdlp_transport::capture(
+        &app,
         &url,
-    ]);
-    let output = tokio::time::timeout(std::time::Duration::from_secs(60), cmd.output())
-        .await
-        .map_err(|_| "YouTube не ответил за 60 секунд. Попробуйте ещё раз.".to_string())?
-        .map_err(|e| format!("Не удалось запустить yt-dlp: {e}"))?;
-    if !output.status.success() {
-        return Err(error_message(&output.stderr));
-    }
+        std::time::Duration::from_secs(60),
+        "Платформа не ответила за 60 секунд. Попробуйте ещё раз.",
+        |cmd| {
+            cmd.args([
+                "--dump-single-json",
+                "--skip-download",
+                "--no-check-formats",
+            ]);
+            if is_youtube(&url) {
+                cmd.args(["--extractor-args", "youtube:skip=translated_subs"]);
+            }
+            cmd.args(["--", &url]);
+        },
+    )
+    .await?;
     let v: Value = serde_json::from_slice(&output.stdout)
         .map_err(|_| "yt-dlp вернул некорректные данные.".to_string())?;
     if v["is_live"].as_bool() == Some(true) {
         return Err("Дождитесь окончания трансляции, затем скачайте запись.".into());
     }
-    let mut heights: Vec<u64> = v["formats"]
+    if v["_type"] == "playlist" || v["entries"].is_array() {
+        return Err("Вставьте ссылку на отдельное видео или трек.".into());
+    }
+    let site =
+        platform::platform(&url::Url::parse(&url).map_err(|e| e.to_string())?).unwrap_or("Медиа");
+    let formats = v["formats"]
         .as_array()
         .into_iter()
         .flatten()
-        .filter(|f| {
-            f["vcodec"].as_str().is_some_and(|c| c != "none")
-                && f["has_drm"].as_bool() != Some(true)
-        })
+        .chain(std::iter::once(&v));
+    let playable = formats.filter(|f| f["has_drm"].as_bool() != Some(true));
+    let video_codec = |f: &Value| match f["vcodec"].as_str() {
+        Some(codec) => codec != "none" && !codec.is_empty(),
+        None => {
+            f["height"].as_u64().is_some()
+                || matches!(
+                    f["ext"].as_str(),
+                    Some("mp4" | "mov" | "webm" | "mkv" | "flv")
+                )
+        }
+    };
+    let audio_codec = |f: &Value| match f["acodec"].as_str() {
+        Some(codec) => codec != "none" && !codec.is_empty(),
+        None => {
+            f["url"].is_string()
+                && (video_codec(f)
+                    || site == "SoundCloud"
+                    || matches!(
+                        f["ext"].as_str(),
+                        Some("m4a" | "mp3" | "aac" | "wav" | "opus" | "flac" | "ogg")
+                    ))
+        }
+    };
+    let has_video = playable.clone().any(video_codec);
+    let has_audio = playable.clone().any(audio_codec);
+    if !has_video && !has_audio {
+        return Err("У файла нет доступных дорожек.".into());
+    }
+    let mut heights: Vec<u64> = playable
+        .filter(|f| video_codec(f))
         .filter_map(|f| f["height"].as_u64())
         .collect();
     heights.sort_unstable_by(|a, b| b.cmp(a));
     heights.dedup();
     let id = v["id"].as_str().unwrap_or_default().to_string();
     Ok(VideoInfo {
-        thumbnail: format!("https://i.ytimg.com/vi/{id}/hqdefault.jpg"),
+        thumbnail: v["thumbnail"]
+            .as_str()
+            .and_then(|value| url::Url::parse(value).ok())
+            .filter(|thumb| {
+                thumb.scheme() == "https"
+                    && thumb.username().is_empty()
+                    && thumb.password().is_none()
+            })
+            .map(String::from)
+            .unwrap_or_default(),
+        platform: site,
+        has_video,
+        has_audio,
+        subtitles: platform::subtitle_languages(&v),
         id,
         url,
         title: v["title"].as_str().unwrap_or("Видео без названия").into(),
         channel: v["channel"]
             .as_str()
             .or(v["uploader"].as_str())
-            .unwrap_or("YouTube")
+            .unwrap_or(site)
             .into(),
         duration: v["duration"].as_f64().unwrap_or(0.0),
         heights,
@@ -306,6 +341,12 @@ async fn inspect_video(app: tauri::AppHandle, url: String) -> Result<VideoInfo, 
 fn validate_request(request: &mut DownloadRequest) -> Result<(), String> {
     request.url = normalize_url(&request.url)?;
     validate_clip(request.clip.as_ref())?;
+    if request.sponsor_block && (!is_youtube(&request.url) || request.clip.is_some()) {
+        return Err("SponsorBlock доступен для целого видео с YouTube.".into());
+    }
+    if request.kind != "audio" && audio_filter(request).is_some() {
+        return Err("Обработка звука доступна в режиме аудио.".into());
+    }
     let allowed = match request.kind.as_str() {
         "video" => ["mp4", "mkv", "webm", "mov"].contains(&request.format.as_str()),
         "audio" => ["mp3", "m4a", "wav", "flac", "opus", "aac", "vorbis"]
@@ -320,20 +361,14 @@ fn validate_request(request: &mut DownloadRequest) -> Result<(), String> {
             && !request
                 .quality
                 .parse::<u32>()
-                .is_ok_and(|n| (144..=8640).contains(&n))
+                .is_ok_and(|n| (1..=16384).contains(&n))
         {
             return Err("Некорректное разрешение видео.".into());
         }
     } else if !["best", "320", "256", "192", "128"].contains(&request.quality.as_str()) {
         return Err("Некорректное качество аудио.".into());
     }
-    let folder = Path::new(&request.folder);
-    if !folder.is_absolute() {
-        return Err("Выберите папку с абсолютным путём.".into());
-    }
-    std::fs::create_dir_all(folder).map_err(|e| format!("Не удалось создать папку: {e}"))?;
-    request.folder = std::fs::canonicalize(folder)
-        .map_err(|e| format!("Папка недоступна: {e}"))?
+    request.folder = extras::validated_folder(&request.folder)?
         .to_string_lossy()
         .into_owned();
     request.title = request.title.chars().take(250).collect();
@@ -375,21 +410,32 @@ fn format_args(request: &DownloadRequest) -> Vec<String> {
     } else {
         format!("[height<= {}]", request.quality).replace(' ', "")
     };
-    let selection = if request.format == "webm" {
-        format!("bestvideo[ext=webm]{limit}+bestaudio[ext=webm]/best[ext=webm]{limit}")
-    } else if request.format == "mp4" || request.format == "mov" {
-        format!("bestvideo[ext=mp4]{limit}+bestaudio[ext=m4a]/best[ext=mp4]{limit}")
-    } else {
-        format!("bestvideo{limit}+bestaudio/best{limit}")
+    let fallback = format!("bestvideo{limit}+bestaudio/best{limit}/bestvideo{limit}");
+    let (selection, merge, conversion) = match request.format.as_str() {
+        "webm" => (
+            format!(
+                "bestvideo[ext=webm]{limit}+bestaudio[ext=webm]/best[ext=webm]{limit}/{fallback}"
+            ),
+            "webm/mkv",
+            "--recode-video",
+        ),
+        "mp4" | "mov" => (
+            format!("bestvideo[ext=mp4]{limit}+bestaudio[ext=m4a]/best[ext=mp4]{limit}/{fallback}"),
+            "mp4/mkv",
+            "--recode-video",
+        ),
+        _ => (fallback, "mkv", "--remux-video"),
     };
-    vec![
+    let mut args = vec![
         "-f".into(),
         selection,
         "--merge-output-format".into(),
-        request.format.clone(),
-        "--remux-video".into(),
-        request.format.clone(),
-    ]
+        merge.into(),
+    ];
+    if request.clip.is_none() {
+        args.extend([conversion.into(), request.format.clone()]);
+    }
+    args
 }
 
 fn publish(app: &tauri::AppHandle, state: &DownloadState, id: &str, update: impl FnOnce(&mut Job)) {
@@ -424,7 +470,11 @@ fn start_download(
             "Нужен FFmpeg для объединения и конвертации. Выполните npm run setup:tools.".into(),
         );
     }
-    let _ = ytdlp(&app)?;
+    if locate(&app, "yt-dlp").is_none() {
+        return Err(
+            "Не найден yt-dlp. Повторите установку компонентов в настройках приложения.".into(),
+        );
+    }
     let state = state.inner().clone();
     let job = Job {
         id: uuid::Uuid::new_v4().to_string(),
@@ -489,59 +539,187 @@ async fn download_worker(
         publish(app, state, id, |j| j.status = "cancelled".into());
         return Ok(());
     }
-    let (mut cmd, _session) = ytdlp(app)?;
-    let suffix = if job.request.quality == "best" {
-        "source".to_string()
-    } else if job.request.kind == "video" {
-        format!("{}p", job.request.quality)
-    } else {
-        format!("{}k", job.request.quality)
-    };
+    let folder = Path::new(&job.request.folder);
+    let filter = audio_filter(&job.request);
+    let staging = extras::Staging::new(folder)?;
+    let resume = app
+        .path()
+        .app_cache_dir()
+        .ok()
+        .map(|cache| output::resume_folder(&cache, folder, &job.request))
+        .transpose()?
+        .flatten();
+    let render_locally = filter.is_some() || job.request.clip.is_some();
     let clip_suffix = job
         .request
         .clip
         .as_ref()
         .map(|clip| format!(" [{:.1}-{:.1}s]", clip.start, clip.end))
         .unwrap_or_default();
-    let output_template = format!("%(title)s [%(id)s] [{suffix}]{clip_suffix}.%(ext)s");
+    let sponsor = if job.request.sponsor_block {
+        " [SponsorBlock]"
+    } else {
+        ""
+    };
+    let mut processed = String::new();
+    for (enabled, label) in [
+        (job.request.normalize_audio, " [LUFS]"),
+        (job.request.remove_silence, " [no pauses]"),
+        (job.request.enhance_voice, " [speech]"),
+    ] {
+        if enabled {
+            processed.push_str(label);
+        }
+    }
+    let output_template = format!(
+        "%(title).120B [%(extractor_key).16B-%(id).25B]{clip_suffix}{sponsor}{processed}.%(ext)s"
+    );
+    let (mut cmd, _session) = ytdlp(app, &job.request.url)?;
     cmd.args(["--newline", "--no-simulate", "--progress", "--progress-delta", "0.3", "--progress-template",
         "download:WD_PROGRESS:%(progress.downloaded_bytes)s|%(progress.total_bytes,progress.total_bytes_estimate)s|%(progress.speed)s|%(progress.eta)s|%(progress.status)s",
-        "--print", "after_move:WD_FILE:%(filepath)s", "--windows-filenames", "--trim-filenames", "180", "--no-overwrites", "-P", &job.request.folder,
-        "-o", &output_template]);
-    cmd.args(format_args(&job.request));
-    if let Some(clip) = &job.request.clip {
-        cmd.arg("--download-sections")
-            .arg(format!("*{:.3}-{:.3}", clip.start, clip.end));
-        cmd.arg("--force-keyframes-at-cuts");
+        "--print", "after_move:WD_FILE:%(filepath)s", "--windows-filenames", "--trim-filenames", "180", "--no-overwrites", "-o", &output_template]);
+    cmd.arg("-P").arg(&staging.0);
+    if let Some(resume) = &resume {
+        let mut temp_path = std::ffi::OsString::from("temp:");
+        temp_path.push(&resume.path);
+        cmd.arg("-P").arg(temp_path);
     }
-    if job.request.metadata {
+    if render_locally && job.request.kind == "audio" {
+        cmd.args(["-f", "bestaudio/best"]);
+    } else {
+        cmd.args(format_args(&job.request));
+    }
+    if job.request.sponsor_block {
+        cmd.args([
+            "--sponsorblock-remove",
+            "sponsor,intro",
+            "--force-keyframes-at-cuts",
+        ]);
+    }
+    if job.request.metadata && !render_locally {
         cmd.arg("--embed-metadata");
     }
-    cmd.args(["--", &job.request.url])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
+    cmd.args(["--match-filters", "!is_live", "--", &job.request.url]);
+    let result = run_download_command(app, state, job, &mut cmd, &mut cancel).await;
+    if result.is_err() && *cancel.borrow() {
+        publish(app, state, id, |j| {
+            j.status = "cancelled".into();
+            j.speed = None;
+            j.eta = None;
+        });
+        return Ok(());
+    }
+    result?;
+    if let Some(resume) = resume {
+        let _ = std::fs::remove_dir(&resume.path);
+    }
+    let file = state
+        .jobs
+        .lock()
+        .unwrap()
+        .get(id)
+        .and_then(|j| j.file.clone());
+    let file = file
+        .map(PathBuf::from)
+        .and_then(|path| std::fs::canonicalize(path).ok())
+        .filter(|path| path.parent() == Some(staging.0.as_path()) && path.is_file())
+        .ok_or("Загрузка завершилась, но итоговый файл не найден.")?;
+    publish(app, state, id, |j| {
+        j.status = "processing".into();
+        j.file = None;
+        j.speed = None;
+        j.eta = None;
+    });
+    let final_media = if render_locally {
+        let result = render_media(app, state, job, &file, filter.as_deref(), &mut cancel).await;
+        if result.is_err() && *cancel.borrow() {
+            publish(app, state, id, |j| j.status = "cancelled".into());
+            return Ok(());
+        }
+        result?
+    } else {
+        file.clone()
+    };
+    let info = output::probe(app, &final_media).await;
+    if *cancel.borrow() {
+        publish(app, state, id, |j| j.status = "cancelled".into());
+        return Ok(());
+    }
+    if job.request.clip.is_some() && info.as_ref().and_then(output::duration).is_none() {
+        return Err("В выбранном фрагменте нет медиа. Проверьте границы обрезки.".into());
+    }
+    let target = folder.join(output::target_name(
+        &file,
+        &final_media,
+        info.as_ref(),
+        &job.request.kind,
+    )?);
+    let file = tauri::async_runtime::spawn_blocking(move || {
+        let _staging = staging;
+        extras::save_unique(&final_media, &target)
+    })
+    .await
+    .map_err(|e| e.to_string())??;
+    publish(app, state, id, |j| {
+        j.file = Some(file.to_string_lossy().into_owned());
+        j.status = "completed".into();
+        j.progress = 100.0;
+        j.speed = None;
+        j.eta = None;
+    });
+    Ok(())
+}
+
+async fn run_download_command(
+    app: &tauri::AppHandle,
+    state: &DownloadState,
+    job: &Job,
+    cmd: &mut Command,
+    cancel: &mut watch::Receiver<bool>,
+) -> Result<(), String> {
+    let id = job.id.as_str();
+    if *cancel.borrow() {
+        return Err("Загрузка отменена.".into());
+    }
     let mut child = cmd
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| format!("Не удалось запустить загрузку: {e}"))?;
     let pid = child.id();
     if let Some(pid) = pid {
-        state.processes.lock().unwrap().insert(id.clone(), pid);
+        state.processes.lock().unwrap().insert(id.to_owned(), pid);
     }
-    let mut stdout =
-        BufReader::new(child.stdout.take().ok_or("Не удалось открыть stdout")?).lines();
-    let mut stderr =
-        BufReader::new(child.stderr.take().ok_or("Не удалось открыть stderr")?).lines();
+    let mut stdout = BufReader::new(
+        child
+            .stdout
+            .take()
+            .ok_or_else(|| "Не удалось открыть stdout".to_owned())?,
+    )
+    .lines();
+    let mut stderr = BufReader::new(
+        child
+            .stderr
+            .take()
+            .ok_or_else(|| "Не удалось открыть stderr".to_owned())?,
+    )
+    .lines();
     let mut errors = std::collections::VecDeque::new();
     let mut out_done = false;
     let mut err_done = false;
-    publish(app, state, id, |j| j.status = "downloading".into());
+    publish(app, state, id, |j| {
+        j.status = "downloading".into();
+        j.progress = 0.0;
+        j.file = None;
+        j.speed = None;
+        j.eta = None;
+    });
     loop {
         tokio::select! {
             _ = cancel.changed() => {
                 if let Some(pid) = pid { kill_tree(pid); }
                 let _ = child.kill().await;
-                publish(app, state, id, |j| { j.status = "cancelled".into(); j.speed = None; j.eta = None; });
-                return Ok(());
+                return Err("Загрузка отменена.".into());
             }
             line = stdout.next_line(), if !out_done => {
                 match line.map_err(|e| e.to_string())? {
@@ -565,31 +743,13 @@ async fn download_worker(
         }
     }
     let status = child.wait().await.map_err(|e| e.to_string())?;
+    state.processes.lock().unwrap().remove(id);
     if !status.success() {
         return Err(error_message(
-            errors
-                .iter()
-                .cloned()
-                .collect::<Vec<_>>()
-                .join("\n")
-                .as_bytes(),
+            errors.make_contiguous().join("\n").as_bytes(),
+            &job.request.url,
         ));
     }
-    let file = state
-        .jobs
-        .lock()
-        .unwrap()
-        .get(id)
-        .and_then(|j| j.file.clone());
-    if !file.as_ref().is_some_and(|p| Path::new(p).is_file()) {
-        return Err("Загрузка завершилась, но итоговый файл не найден.".into());
-    }
-    publish(app, state, id, |j| {
-        j.status = "completed".into();
-        j.progress = 100.0;
-        j.speed = None;
-        j.eta = None;
-    });
     Ok(())
 }
 
@@ -671,6 +831,7 @@ fn open_folder(
     app: tauri::AppHandle,
     state: tauri::State<'_, Arc<DownloadState>>,
     id: Option<String>,
+    folder: Option<String>,
 ) -> Result<(), String> {
     let folder = if let Some(id) = id {
         let jobs = state.jobs.lock().unwrap();
@@ -680,6 +841,8 @@ fn open_folder(
             .and_then(|f| Path::new(f).parent())
             .map(Path::to_path_buf)
             .unwrap_or_else(|| PathBuf::from(&job.request.folder))
+    } else if let Some(folder) = folder.filter(|folder| !folder.is_empty()) {
+        extras::validated_folder(&folder)?
     } else {
         default_folder(&app)
     };
@@ -701,7 +864,6 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            net::start();
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
             let history = dir.join("history.json");
@@ -724,6 +886,7 @@ pub fn run() {
                 processes: Mutex::new(HashMap::new()),
                 slot: Semaphore::new(1),
                 preview_slot: Semaphore::new(1),
+                extras_slot: Semaphore::new(1),
                 install_slot: Semaphore::new(1),
                 history,
             }));
@@ -739,6 +902,8 @@ pub fn run() {
             youtube_login::open_in_browser,
             ytdlp_update::update_ytdlp,
             inspect_video,
+            extras::save_extra,
+            platform::sponsor_segments,
             get_jobs,
             start_download,
             cancel_download,
@@ -746,8 +911,7 @@ pub fn run() {
             open_folder,
             preview::prepare_preview,
             installer::ensure_dependencies,
-            installer::open_tool_download,
-            installer::open_team_site
+            installer::open_tool_download
         ])
         .build(tauri::generate_context!())
         .expect("Не удалось запустить Wdownloader");
@@ -808,11 +972,17 @@ mod tests {
             folder: String::new(),
             metadata: true,
             clip: None,
+            sponsor_block: false,
+            normalize_audio: false,
+            remove_silence: false,
+            enhance_voice: false,
         };
-        assert_eq!(
-            format_args(&r)[1],
-            "bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][height<=1080]"
-        );
+        assert_eq!(format_args(&r)[1], "bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][height<=1080]/bestvideo[height<=1080]+bestaudio/best[height<=1080]/bestvideo[height<=1080]");
+        r.clip = Some(ClipRange {
+            start: 1.2,
+            end: 4.5,
+        });
+        assert!(!format_args(&r).contains(&"--recode-video".to_string()));
         r.kind = "audio".into();
         r.format = "mp3".into();
         r.quality = "320".into();
@@ -835,5 +1005,25 @@ mod tests {
         ] {
             assert!(validate_clip(Some(&ClipRange { start, end })).is_err());
         }
+    }
+
+    #[test]
+    fn reads_m4a_clip_from_old_history() {
+        let request: DownloadRequest = serde_json::from_value(serde_json::json!({
+            "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+            "title": "Тестовый фрагмент",
+            "kind": "audio",
+            "format": "m4a",
+            "quality": "best",
+            "folder": "C:/Downloads",
+            "metadata": true,
+            "clip": { "start": 62.7, "end": 164.2 }
+        }))
+        .unwrap();
+        assert_eq!(request.format, "m4a");
+        assert!(audio_filter(&request).is_none());
+        assert!(!request.sponsor_block);
+        let clip = request.clip.unwrap();
+        assert_eq!((clip.start, clip.end), (62.7, 164.2));
     }
 }

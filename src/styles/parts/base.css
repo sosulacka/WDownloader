@@ -1,71 +1,75 @@
-
-/* ---------- Токены: чёрная тема (по умолчанию) ---------- */
 :root,
 [data-theme="dark"] {
-  --bg: #09090a;
-  --bg-raised: #0d0d0f;
-  --surface: #111113;
-  --surface-2: #17171a;
-  --surface-3: #1f1f23;
-  --hover: #ffffff0b;
-  --press: #ffffff14;
-  --line: #ffffff10;
-  --line-2: #ffffff1c;
-  --line-3: #ffffff30;
-  --text: #f5f5f4;
-  --text-2: #a3a3a9;
-  --text-3: #66666d;
-  --ink: #f5f5f4;
-  --ink-text: #0a0a0b;
-  --ink-hover: #ffffff;
-  --halo: #ffffff0d;
-  --grid: #ffffff05;
-  --wave-dim: #ffffff2b;
-  --wave: #f5f5f4;
-  --backdrop: #000000b8;
-  --shadow: 0 1px 0 #ffffff07 inset, 0 24px 48px -28px #000;
-  --shadow-pop: 0 0 0 1px var(--line-2), 0 28px 64px -16px #000;
+  --bg: #1b1816;
+  --bg-raised: #211d1a;
+  --surface: #2a2420;
+  --surface-2: #352d26;
+  --surface-3: #3a322c;
+  --text: #f5ede4;
+  --text-2: #d4c5b8;
+  --text-3: #bcafa2;
+  --ink: #edab91;
+  --ink-text: #29170f;
+  --ink-hover: #f5bb9f;
+  --accent: #edab91;
+  --accent-soft: #edab911b;
+  --error: #f6aa9f;
+  --success: #aed0a7;
+  --hover: #fff0dc0c;
+  --press: #fff0dc15;
+  --line: #fff0dc12;
+  --line-2: #fff0dc32;
+  --line-3: #fff0dc42;
+  --wave: #ceb7a6;
+  --wave-dim: #ceb7a655;
+  --backdrop: #100c09bd;
+  --shadow: 0 10px 26px -13px #0c0807bf;
+  --shadow-pop: 0 16px 44px -12px #0c0807ce;
   color-scheme: dark;
 }
 
-/* ---------- Белая тема ---------- */
 [data-theme="light"] {
-  --bg: #f3f3f1;
-  --bg-raised: #f8f8f6;
-  --surface: #ffffff;
-  --surface-2: #f6f6f4;
-  --surface-3: #ebebe8;
-  --hover: #0000000a;
-  --press: #00000012;
-  --line: #00000010;
-  --line-2: #0000001a;
-  --line-3: #00000030;
-  --text: #0a0a0b;
-  --text-2: #56565c;
-  --text-3: #8d8d93;
-  --ink: #0a0a0b;
-  --ink-text: #fafafa;
-  --ink-hover: #2a2a2e;
-  --halo: #ffffffcc;
-  --grid: #00000007;
-  --wave-dim: #0000002b;
-  --wave: #0a0a0b;
-  --backdrop: #0a0a0b59;
-  --shadow: 0 1px 2px #0000000a, 0 18px 40px -26px #00000059;
-  --shadow-pop: 0 0 0 1px var(--line-2), 0 28px 64px -20px #00000052;
+  --bg: #f5f0e8;
+  --bg-raised: #eee7dc;
+  --surface: #fffcf7;
+  --surface-2: #f7f0e7;
+  --surface-3: #ece1d4;
+  --text: #2a211b;
+  --text-2: #594c41;
+  --text-3: #6e5b4e;
+  --ink: #933d28;
+  --ink-text: #fff8ef;
+  --ink-hover: #7f301f;
+  --accent: #933d28;
+  --accent-soft: #933d2815;
+  --error: #a2332a;
+  --success: #3c6740;
+  --hover: #5036210b;
+  --press: #50362118;
+  --line: #54341f16;
+  --line-2: #54341f35;
+  --line-3: #54341f47;
+  --wave: #756052;
+  --wave-dim: #7560524f;
+  --backdrop: #271b125e;
+  --shadow: 0 10px 26px -13px #8b6f5066;
+  --shadow-pop: 0 16px 44px -12px #6f54366b;
   color-scheme: light;
 }
 
 :root {
-  --radius: 16px;
-  --radius-md: 12px;
+  --media-bg: #15120f;
+  --media-text: #fff8ef;
+  --media-badge: #201610cf;
+  --radius: 20px;
+  --radius-md: 14px;
   --radius-sm: 9px;
   --radius-xs: 6px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --spring: cubic-bezier(0.34, 1.5, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 0.64, 0.36, 1);
+  --spring: cubic-bezier(0.22, 0.64, 0.36, 1);
   --titlebar: 36px;
-  --sidebar: 232px;
+  --sidebar: 206px;
   font-family: "Manrope Variable", system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
@@ -98,6 +102,7 @@ body {
   background: var(--bg);
   color: var(--text);
 }
+html { zoom: var(--browser-zoom, 1); }
 button,
 input {
   font: inherit;
@@ -116,11 +121,11 @@ button:disabled {
   opacity: 0.4;
 }
 :focus-visible {
-  outline: 2px solid var(--text);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
-input:focus-visible {
+input:not([type="checkbox"]):focus-visible {
   outline: none;
 }
 h1,
@@ -132,13 +137,17 @@ p {
 img {
   display: block;
 }
+[data-ui-icon] {
+  display: block;
+  flex: 0 0 auto;
+}
 ::selection {
   background: var(--ink);
   color: var(--ink-text);
 }
 kbd {
   font: inherit;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   min-width: 20px;
   height: 20px;
@@ -150,7 +159,6 @@ kbd {
   color: var(--text-2);
   background: var(--surface-2);
   border: 1px solid var(--line-2);
-  border-bottom-width: 2px;
 }
 ::-webkit-scrollbar {
   width: 10px;
@@ -254,10 +262,11 @@ kbd {
 }
 [data-tooltip]::after {
   content: attr(data-tooltip);
+  display: none;
   position: absolute;
   left: 50%;
   bottom: calc(100% + 8px);
-  transform: translate(-50%, 4px);
+  transform: translateX(-50%);
   padding: 5px 9px;
   border-radius: 7px;
   background: var(--ink);
@@ -267,26 +276,19 @@ kbd {
   line-height: 1.3;
   white-space: nowrap;
   pointer-events: none;
-  opacity: 0;
   z-index: 60;
-  transition:
-    opacity 0.15s,
-    transform 0.2s var(--ease-out);
 }
 [data-tooltip]:hover::after,
 [data-tooltip]:focus-visible::after {
-  opacity: 1;
-  transform: translate(-50%, 0);
-  transition-delay: 0.35s;
+  display: block;
+  animation: fade 0.15s 0.3s both;
+}
+:is(.topbar, .card-title, .job-actions, .url-input) [data-tooltip]::after {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 .topbar [data-tooltip]::after {
   bottom: auto;
   top: calc(100% + 8px);
-  left: auto;
-  right: 0;
-  transform: translateY(-4px);
-}
-.topbar [data-tooltip]:hover::after,
-.topbar [data-tooltip]:focus-visible::after {
-  transform: none;
 }

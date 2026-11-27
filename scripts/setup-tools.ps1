@@ -111,7 +111,8 @@ $ffmpegCommit = [regex]::Match($versions.ffmpeg, '-g([0-9a-f]{7,40})').Groups[1]
 Bundled tools and source code:
 yt-dlp $($ytdlp.tag_name): $($ytdlp.html_url)
 Source: https://github.com/yt-dlp/yt-dlp/tree/$($ytdlp.tag_name)
-License: Unlicense; bundled executable notices: yt-dlp-THIRD-PARTY.txt
+License: Windows executable GPL-3.0-or-later; upstream repository Unlicense.
+Third-party notices: yt-dlp-THIRD-PARTY.txt
 
 $($versions.ffmpeg)
 Source: https://github.com/FFmpeg/FFmpeg/tree/$ffmpegCommit

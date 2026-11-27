@@ -9,6 +9,9 @@ export type Status =
   | "completed"
   | "failed"
   | "cancelled";
+export type ExtraFormat = "jpg" | "webp" | "srt" | "txt";
+export type SponsorSegment = { segment: [number, number]; category: "sponsor" | "intro" };
+
 export type VideoInfo = {
   id: string;
   url: string;
@@ -18,6 +21,10 @@ export type VideoInfo = {
   thumbnail: string;
   heights: number[];
   views: number | null;
+  platform: string;
+  hasVideo: boolean;
+  hasAudio: boolean;
+  subtitles: string[];
 };
 export type Request = {
   url: string;
@@ -28,6 +35,10 @@ export type Request = {
   folder: string;
   metadata: boolean;
   clip?: ClipRange | null;
+  sponsorBlock?: boolean;
+  normalizeAudio?: boolean;
+  removeSilence?: boolean;
+  enhanceVoice?: boolean;
 };
 export type Job = {
   id: string;
@@ -59,6 +70,9 @@ export type Prefs = {
   videoFormat: string;
   audioFormat: string;
   audioQuality: string;
+  normalizeAudio: boolean;
+  removeSilence: boolean;
+  enhanceVoice: boolean;
 };
 
 export const activeStates: Status[] = ["queued", "downloading", "processing"];
@@ -100,6 +114,9 @@ export const defaultPrefs: Prefs = {
   videoFormat: "mp4",
   audioFormat: "mp3",
   audioQuality: "best",
+  normalizeAudio: false,
+  removeSilence: false,
+  enhanceVoice: false,
 };
 
 export const errorText = (e: unknown) =>
